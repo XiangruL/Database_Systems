@@ -34,13 +34,11 @@ public class parserTest {
 		for (File sql : sqlFiles) {
 			try {
 				FileReader stream = new FileReader(sql);
-				
-				CCJSqlParser parser = new CCJSqlParser(stream);
-				Statement stmt;
-				
-				//BufferedReader test = new BufferedReader(stream);
-				while((stmt = parser.Statement()) != null) {
+				CCJSqlParser parser = new CCJSqlParser(stream); 
+				List<Statement> stmtList = parser.Statements().getStatements();
+				for (int j = 0; j < stmtList.size(); j++) {
 					//System.out.print("LINE: " + stmt);
+					Statement stmt = stmtList.get(j);
 					if (stmt instanceof Select) {
 						LOGGER.log(Level.SEVERE, "LINE: " + ((Select) stmt).getSelectBody());
 						
