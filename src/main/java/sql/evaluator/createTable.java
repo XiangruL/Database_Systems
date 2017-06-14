@@ -7,12 +7,20 @@ import net.sf.jsqlparser.statement.create.table.ColumnDefinition;
 import net.sf.jsqlparser.statement.create.table.CreateTable;
 
 public class createTable {
-	/* key -- column name 
-	 * value -- column_number,column_type
-	 */
-	protected static HashMap<String, String> tableInfo = new HashMap<String, String>();
 	
+	/* store all table information 
+	 * key -- table name(string);
+	 * value -- a hashmap contains column metadata
+	 */
+	protected static HashMap<String, HashMap<String, String>> allTable = new HashMap<String, HashMap<String, String>>();
+	
+	/* put column information into tableInfo from the given statement */
 	public static void processSQL(CreateTable createTable) {
+		/* key -- column name 
+		 * value -- column_number,column_type
+		 */
+		HashMap<String, String> tableInfo = new HashMap<String, String>();
+
 		List<ColumnDefinition> columnDefinitions = createTable.getColumnDefinitions();
 		int colNum = 1;
 		for (ColumnDefinition o :columnDefinitions) {
@@ -23,5 +31,6 @@ public class createTable {
 			tableInfo.put(o.getColumnName(), s.toString());
 			colNum++;
 		}
+		allTable.put(createTable.getTable().getName(), tableInfo);
 	}
 }

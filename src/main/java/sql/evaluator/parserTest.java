@@ -21,7 +21,6 @@ public class parserTest {
 		int i;
 		File dataDir = null;
 		ArrayList<File> sqlFiles = new ArrayList<File>();
-		HashMap<String, CreateTable> tables = new HashMap<String, CreateTable>();
 		
 		for(i = 0; i < args.length; i++) {
 			if(args[i].equals("--data")) {
@@ -48,7 +47,8 @@ public class parserTest {
 					} else if (stmt instanceof CreateTable) {
 						CreateTable ct = (CreateTable)stmt;
 						createTable.processSQL(ct);
-						LOGGER.log(Level.SEVERE, "LINE: " + createTable.tableInfo.get("pubTypeID"));
+						LOGGER.log(Level.SEVERE, "LINE: " + createTable.allTable.get("publicationType").get("pubTypeID"));
+					//	LOGGER.log(Level.SEVERE, "Table name is " + ct.getTable().getName());
 					}
 					
 				}
