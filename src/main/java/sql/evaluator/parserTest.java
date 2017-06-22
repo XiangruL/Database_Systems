@@ -40,16 +40,22 @@ public class parserTest {
 					//System.out.print("LINE: " + stmt);
 					Statement stmt = stmtList.get(j);
 					if (stmt instanceof Select) {
-						LOGGER.log(Level.SEVERE, "LINE: " + ((Select) stmt).getSelectBody());
+						LOGGER.log(Level.SEVERE,parseSelect.splitStatement(stmt));
 						
 					} else if (stmt instanceof CreateTable) {
 						CreateTable ct = (CreateTable)stmt;
 						createTable.processSQL(ct);
-						LOGGER.log(Level.SEVERE, "LINE: " + createTable.allTable.get("publicationType").get("pubTypeID"));
-					//	LOGGER.log(Level.SEVERE, "Table name is " + ct.getTable().getName());
-					}
-					
+
+						//	LOGGER.log(Level.SEVERE, "Table name is " + ct.getTable().getName());
+					}		
 				}
+//				LOGGER.log(Level.SEVERE, "LINE: " + createTable.allTable.get("publicationType").get("pubTypeID"));
+//				LOGGER.log(Level.SEVERE, "LINE: " + createTable.allTable.get("publicationType").get("pubTypeID"));
+//
+//				LOGGER.log(Level.SEVERE, "LINE: " + createTable.allTable.get("venue").get("vName"));
+//				LOGGER.log(Level.SEVERE, "LINE: " + createTable.allTable.get("author").get("firstName"));
+//				LOGGER.log(Level.SEVERE, "LINE: " + createTable.allTable.get("authorship").get("lastName"));
+//				LOGGER.log(Level.SEVERE, "LINE: " + createTable.allTable.get("authorship").get("instituteID"));
 			} catch (IOException e) {
 				e.printStackTrace();
 			} catch (ParseException e) {
