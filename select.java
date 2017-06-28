@@ -1,7 +1,6 @@
 package sql.evaluator;
 
 import java.util.HashMap;
-
 import ParseSqlQuery.tool;
 
 public class select {
@@ -15,15 +14,21 @@ public class select {
 		String tableName = rowStrings[rowStrings.length-1];
 		//get the type and column of attribute
 		String[] str = query.trim().split("\\s+");
+		
 		String colName = str[0];
 		
 		int colNum = tool.getColNum(scheme, tableName, colName);
 		String type = tool.getColType(scheme, tableName, colName);
 		//get the operator from query
 		String operator = str[1];
-				
+		
 		//cast the type of constant based on the variable type
 		String operand = str[2];
+		for (int i = 3; i < str.length; i++) {
+			operand +=" "+str[i];
+		}
+		
+		
 		
 		String temp;
 		if(type.contains("varchar") || type.equals("date")){
@@ -36,7 +41,6 @@ public class select {
 		}
 		
 		temp = rowStrings[colNum];
-	
 		switch (operator) {
 		case "=":
 			if(temp.equals(operand)){
@@ -46,6 +50,7 @@ public class select {
 			break;
 			
 		case ">":
+	
 			if(tool.isLarge(type, temp, operand)){
 				sb.append(row);
 				return sb;
@@ -63,9 +68,7 @@ public class select {
 		default:
 			break;
 		}	
-		
-		
-		
+
 		return null;
 	}
 	
