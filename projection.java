@@ -21,7 +21,12 @@ public class projection {
 			}
 			sb.append(rowString[colNum]+",");
 		}
-		result.add(index, sb);
+		if(index != -1){
+			result.add(index, sb);
+		}else{
+			result.add(sb);
+		}
+		
 		return result;
 	}
 
