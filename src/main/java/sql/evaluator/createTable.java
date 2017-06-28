@@ -22,13 +22,14 @@ public class createTable {
 		HashMap<String, String> tableInfo = new HashMap<String, String>();
 
 		List<ColumnDefinition> columnDefinitions = createTable.getColumnDefinitions();
-		int colNum = 1;
+		int colNum = 0;
 		for (ColumnDefinition o :columnDefinitions) {
 			StringBuffer s = new StringBuffer();
 			s.append(colNum);
 			s.append(",");
-			s.append(o.getColDataType().toString());
-			tableInfo.put(o.getColumnName(), s.toString());
+			s.append(o.getColDataType().toString().toLowerCase());
+			// change column name to lower case and map column name and type
+			tableInfo.put(o.getColumnName().toLowerCase(), s.toString());
 			colNum++;
 		}
 		allTable.put(createTable.getTable().getName(), tableInfo);

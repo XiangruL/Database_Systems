@@ -40,8 +40,8 @@ public class parserTest {
 					//System.out.print("LINE: " + stmt);
 					Statement stmt = stmtList.get(j);
 					if (stmt instanceof Select) {
-						LOGGER.log(Level.SEVERE,parseSelect.splitStatement(stmt));
-						
+						//LOGGER.log(Level.SEVERE,parseSelect.splitStatement(stmt));
+						parseSelect.splitStatement(stmt);
 					} else if (stmt instanceof CreateTable) {
 						CreateTable ct = (CreateTable)stmt;
 						createTable.processSQL(ct);
