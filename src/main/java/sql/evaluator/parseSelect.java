@@ -26,8 +26,8 @@ public class parseSelect {
 	private static HashMap<String, String> aliasNameMap = new HashMap<String, String>();
 	private static final Logger LOGGER = Logger.getLogger( parserTest.class.getName() );
 	private static ArrayList<String> joinTable;
-	private static List<Expression> whereCondition;
-	private static List<Expression> havingCondition;
+	private static ArrayList<String> whereCondition;
+	private static ArrayList<String> havingCondition;
 	private static ArrayList<String> fromTable;
 	private static ArrayList<String> projectTable;
 
@@ -62,8 +62,8 @@ public class parseSelect {
 		List<Expression> whereList = new ArrayList<Expression>();
 		List<Expression> condition = new ArrayList<Expression>();
 		
-		whereCondition = new ArrayList<Expression>();
-		havingCondition = new ArrayList<Expression>(); 
+		whereCondition = new ArrayList<String>();
+		havingCondition = new ArrayList<String>(); 
 		joinTable = new ArrayList<String>();
 		projectTable = new ArrayList<String>();
 		
@@ -99,6 +99,13 @@ public class parseSelect {
 			}
 		}
 		
+		
+		/** after having all names and alias print all from item **/
+		for (String st : aliasNameMap.keySet()) {
+			fromTable.add(aliasNameMap.get(st));
+		}
+		from.append(fromTable.toString().substring(1, fromTable.toString().length() - 1));
+		from.append("\n");
 
 		
 		/** get select item **/
@@ -108,8 +115,10 @@ public class parseSelect {
 		for (SelectItem o : selectItemList) {
 			// select *
 			if (aliasFlag == true) {
+				StringBuilder temp = new StringBuilder();
 				select = aliasToName(o,select);
-				project = aliasToName(o, project);
+				temp = aliasToName(o, temp);
+				projectTable.add(temp.toString());
 			} else {
 				if (o.toString().contains("*")) {
 					if (createTable.allTable.get((o.toString().toLowerCase().split("\\."))[0]) != null) {
@@ -118,7 +127,7 @@ public class parseSelect {
 							select.append(prefix);
 							prefix = ", ";
 							select.append(s);
-							projectTable.add(s);
+							projectTable.add(s);		
 						}
 						// *
 					} else {
@@ -143,14 +152,6 @@ public class parseSelect {
 		
 		select.append("\n");
 		project.append("\n");
-		
-		
-		/** after having all names and alias print all from item **/
-		for (String st : aliasNameMap.keySet()) {
-			fromTable.add(aliasNameMap.get(st));
-		}
-		from.append(fromTable.toString().substring(1, fromTable.toString().length() - 1));
-		from.append("\n");
 		
 		
 		/** get group-by item **/
@@ -203,7 +204,7 @@ public class parseSelect {
 				if (e instanceof EqualsTo) {
 					join = parseEqualTo(e, aliasFlag, join);
 				} else {
-					parseSelect.whereCondition.add(e);
+					parseSelect.whereCondition.add(e.toString());
 				}
 				where.append(e.toString().toLowerCase());
 				where.append("\n");
@@ -215,7 +216,7 @@ public class parseSelect {
 			} else {
 				if (whereEx != null) {
 					where.append(whereEx.toString().toLowerCase());
-					whereCondition.add(whereEx);
+					whereCondition.add(whereEx.toString());
 				} else {
 					// no where statement
 					where.append(whereEx);
@@ -239,14 +240,16 @@ public class parseSelect {
 		res.append(orderBy);
 	//	res.append(whereCondition);
 	//	res.append(where);
-		
 		System.out.println(res.toString());
+		
 		parseSelect.algebraGen();
 		
 	}
 	
 	public static StringBuilder aliasToName(Object o, StringBuilder s) {
 		// has alias and can split
+		if (o == null) 
+			return null;
 		String temp = o.toString().toLowerCase();
 		if (aliasNameMap.get((temp.split("\\."))[0]) != null) {
 			// contains *
@@ -266,9 +269,13 @@ public class parseSelect {
 				s.append(".");
 				s.append((temp.split("\\."))[1]);
 			}
-		// cannot handle non alias input
+		// handle non alias input
 		} else {
-			LOGGER.log(Level.SEVERE, "Wrong sql syntax");
+			if (createTable.allTable.get((temp.split("\\."))[0]) != null) {
+				s.append(temp);
+			} else {
+				System.out.println("cannot find tthis table name");
+			}
 		}
 		s.append(" ");
 		return s;
@@ -302,8 +309,8 @@ public class parseSelect {
 			}
 			/* where condition */
 			if (whereCondition.size() != 0) {
-				for (Expression e : whereCondition) {
-					temp = select.selectRow(createTable.allTable, temp, e.toString());
+				for (String s : whereCondition) {
+					temp = select.selectRow(createTable.allTable, temp, s);
 					// not meet the select requirement
 					if (temp == null) {
 						break;
@@ -312,7 +319,7 @@ public class parseSelect {
 			}
 			if (temp == null)
 				continue;
-			
+			/* projection */
 			query = projectTable.toString().substring(1, projectTable.toString().length() - 1);
 			result = projection.proTable(result, createTable.allTable, temp, query, -1);
 					
@@ -373,7 +380,7 @@ public class parseSelect {
 				}
 			} else {
 				// it's selection condition not for joining
-				parseSelect.whereCondition.add(e);
+				parseSelect.whereCondition.add(e.toString());
 			}
 		} else {
 			// right expression contains ".", means it's join condition
@@ -392,7 +399,7 @@ public class parseSelect {
 					join.append(", ");
 				}
 			} else {
-				parseSelect.whereCondition.add(e);
+				parseSelect.whereCondition.add(e.toString());
 			}
 		}
 		return join;
