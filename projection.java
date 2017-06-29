@@ -5,7 +5,7 @@ import java.util.HashMap;
 
 public class projection {
 	public ArrayList<StringBuilder> proTable(ArrayList<StringBuilder> result,
-			HashMap<String, HashMap<String, String>> scheme, 
+			HashMap<String, HashMap<String, String>> schema, 
 			StringBuilder row,String query,int index){
 		
 		if(row.length()>0){
@@ -22,7 +22,7 @@ public class projection {
 				tableName = tcName[0];
 				colName = tcName[1];
 			
-				colNum = tool.getColNum(scheme, tableName, colName);
+				colNum = tool.getColNum(schema, tableName, colName);
 			
 				if(i == qstr.length-1){
 					sb.append(rowString[colNum]);

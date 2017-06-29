@@ -7,10 +7,10 @@ import java.util.HashMap;
 
 public class tool {
 	
-	public static int getColNum(HashMap<String, HashMap<String, String>> scheme,
+	public static int getColNum(HashMap<String, HashMap<String, String>> schema,
 			String tableName, String colName){
 		//get the column information
-		HashMap<String, String> tableMap1 = scheme.get(tableName);
+		HashMap<String, String> tableMap1 = schema.get(tableName);
 		int colNum = -1;
 	
 		//check if table contain this colName
@@ -27,10 +27,10 @@ public class tool {
 		return colNum;
 	}
 	
-	public static String getColType(HashMap<String, HashMap<String, String>> scheme,
+	public static String getColType(HashMap<String, HashMap<String, String>> schema,
 			String tableName, String colName){
 		//get the column information
-		HashMap<String, String> tableMap1 = scheme.get(tableName);
+		HashMap<String, String> tableMap1 = schema.get(tableName);
 		String colType = "-";
 				
 		//check if table contain this colName

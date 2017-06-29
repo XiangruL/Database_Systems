@@ -5,7 +5,7 @@ import java.util.HashMap;
 
 public class select {
 	//query contains upper cases and lower cases
-	public StringBuilder selectRow(HashMap<String, HashMap<String, String>> scheme,
+	public StringBuilder selectRow(HashMap<String, HashMap<String, String>> schema,
 			StringBuilder row, String tableName, String query){
 		StringBuilder sb = new StringBuilder();
 		//Ex. query = "pubDate > '2017-01-01'";
@@ -17,8 +17,8 @@ public class select {
 		
 		String colName = str[0].toLowerCase();
 		
-		int colNum = tool.getColNum(scheme, tableName, colName);
-		String type = tool.getColType(scheme, tableName, colName);
+		int colNum = tool.getColNum(schema, tableName, colName);
+		String type = tool.getColType(schema, tableName, colName);
 		//get the operator from query
 		String operator = str[1];
 		
