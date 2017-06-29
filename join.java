@@ -8,37 +8,53 @@ public class join {
 	HashMap<String, HashMap<String, String>> newSchema = new HashMap<>();
 	
 	public StringBuilder joinRow(HashMap<String, HashMap<String, String>> schema,
-			StringBuilder row1, StringBuilder row2, String tableName1, String tableName2,
-			String colName1, String colName2, boolean flag){
+			StringBuilder row1, StringBuilder row2, String query, boolean flag){
+		
 		StringBuilder row = new StringBuilder();
-		row.append(row1.toString());
-		String[] rowString1 = row.toString().split("\\|");
-		String[] rowString2 = row2.toString().split("\\|");
-		
-		int colNum1 = tool.getColNum(schema, tableName1, colName1);
-		int colNum2 = tool.getColNum(schema, tableName2, colName2);
-		
-		//flag is used to check if this is the first time join two tables
-		if(!flag){
-			//create schema
-			createSchema(schema,tableName1,tableName2,colName2);
-		}
-		
-		if(rowString1[colNum1].equals(rowString2[colNum2])){
+		if(row1.length()>0){
 			
-			for (int i = 0; i < rowString2.length; i++) {
-				if(!rowString2[i].equals(colName2)){
-					if(i == rowString2.length-1){
-						row.append(rowString2[i]);
-						break;
-					}
-					row.append(rowString2[i]+"|");
-				}
+			row.append(row1.toString());
+			String[] rowString1 = row.toString().split("\\|");
+			String[] rowString2 = row2.toString().split("\\|");
+			
+			//parse query to get table name and column name
+			String[] qstr = query.split("\\s+");
+			String[] tcName1 = qstr[0].split("\\.");
+			String[] tcName2 = qstr[2].split("\\.");
+			
+			String tableName1 = tcName1[0];
+			String tableName2 = tcName2[0];
+			
+			String colName1 = tcName1[1];
+			String colName2 = tcName2[1];
+			
+			int colNum1 = tool.getColNum(schema, tableName1, colName1);
+			int colNum2 = tool.getColNum(schema, tableName2, colName2);
+			
+			//flag is used to check if this is the first time join two tables
+			if(!flag){
+				//create schema
+			
+				createSchema(schema,tableName1,tableName2,colName2);
 			}
 			
-		}else{
-			row.delete(0, row.length());
+			if(rowString1[colNum1].equals(rowString2[colNum2])){
+				
+				for (int i = 0; i < rowString2.length; i++) {
+					if(!rowString2[i].equals(colName2)){
+						if(i == rowString2.length-1){
+							row.append(rowString2[i]);
+							break;
+						}
+						row.append(rowString2[i]+"|");
+					}
+				}
+				
+			}else{
+				row.delete(0, row.length());
+			}
 		}
+		
 		
 		
 		
