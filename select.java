@@ -1,21 +1,21 @@
 package sql.evaluator;
 
 import java.util.HashMap;
-import ParseSqlQuery.tool;
+
 
 public class select {
-
+	//query contains upper cases and lower cases
 	public StringBuilder selectRow(HashMap<String, HashMap<String, String>> scheme,
-			StringBuilder row, String query){
+			StringBuilder row, String tableName, String query){
 		StringBuilder sb = new StringBuilder();
 		//Ex. query = "pubDate > '2017-01-01'";
 		//get table name
 		String[] rowStrings = row.toString().split("\\|");
-		String tableName = rowStrings[rowStrings.length-1];
+
 		//get the type and column of attribute
 		String[] str = query.trim().split("\\s+");
 		
-		String colName = str[0];
+		String colName = str[0].toLowerCase();
 		
 		int colNum = tool.getColNum(scheme, tableName, colName);
 		String type = tool.getColType(scheme, tableName, colName);
