@@ -78,7 +78,7 @@ public class join {
 		while (it.hasNext()) {
 		       Map.Entry pair = (Map.Entry)it.next();
 		       colHashMap1.put((String)pair.getKey(), (String)pair.getValue());
-		       System.out.println((String)pair.getKey());
+		      
 		}
 		newSchema.put(tableName1, colHashMap1);
 		
@@ -88,6 +88,12 @@ public class join {
 	    while (it.hasNext()) {
 	        Map.Entry pair = (Map.Entry)it.next();
 	        if(columnName.equals((String)pair.getKey())){
+	        	colNum = tool.getColNum(schema, tableName1, columnName);
+	        	temp = (String) pair.getValue();
+		        str = temp.split(",");
+		        str[0] = String.valueOf(colNum);
+		        temp = str[0]+","+str[1];
+	        	colHashMap2.put(columnName, temp);
 	        	continue;
 	        }
 	        colName = (String)pair.getKey();
