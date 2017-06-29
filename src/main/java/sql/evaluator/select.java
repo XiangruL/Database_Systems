@@ -2,33 +2,35 @@ package sql.evaluator;
 
 import java.util.HashMap;
 
-public class select {
 
-	public static StringBuilder selectRow(HashMap<String, HashMap<String, String>> scheme,
+public class select {
+	//query contains upper cases and lower cases
+	public StringBuilder selectRow(HashMap<String, HashMap<String, String>> schema,
 			StringBuilder row, String query){
 		StringBuilder sb = new StringBuilder();
-		//Ex. query = "pubDate > '2017-01-01'";
+		//Ex. query = "publication.pubDate > '2017-01-01'";
 		//get table name
 		String[] rowStrings = row.toString().split("\\|");
-		String tableName = rowStrings[rowStrings.length-1];
+
 		//get the type and column of attribute
-		String[] str = query.trim().split("\\s+");
+		String[] qstr = query.trim().split("\\s+");
+		String[] tcName = qstr[0].toLowerCase().split("\\.");
+		String tableName = tcName[0];
+		String colName = tcName[1];
 		
-		String colName = str[0].toLowerCase();
-		
-		int colNum = tool.getColNum(scheme, tableName, colName);
-		String type = tool.getColType(scheme, tableName, colName);
+		int colNum = tool.getColNum(schema, tableName, colName);
+		String type = tool.getColType(schema, tableName, colName);
 		//get the operator from query
-		String operator = str[1];
+		String operator = qstr[1];
 		
-		//cast the type of constant based on the variable type
-		String operand = str[2];
-		for (int i = 3; i < str.length; i++) {
-			operand +=" "+str[i];
+		//combine the opreand which might be splited by space
+		String operand = qstr[2];
+		for (int i = 3; i < qstr.length; i++) {
+			operand +=" "+qstr[i];
 		}
 		
 		
-		
+		//cast the type of constant based on the variable type
 		String temp;
 		if(type.contains("varchar") || type.equals("date")){
 			temp = operand.substring(1, operand.length()-1);
@@ -42,7 +44,7 @@ public class select {
 		temp = rowStrings[colNum];
 		switch (operator) {
 		case "=":
-			if(temp.equalsIgnoreCase(operand)){
+			if(temp.equals(operand)){
 				sb.append(row);
 				return sb;
 			}
@@ -68,7 +70,7 @@ public class select {
 			break;
 		}	
 
-		return null;
+		return sb;
 	}
 	
 }

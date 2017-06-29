@@ -7,39 +7,53 @@ import java.util.HashMap;
 
 public class tool {
 	
-	public static int getColNum(HashMap<String, HashMap<String, String>> scheme,
+	public static int getColNum(HashMap<String, HashMap<String, String>> schema,
 			String tableName, String colName){
 		//get the column information
-		HashMap<String, String> tableMap1 = scheme.get(tableName);
-						
-		//get the column number and type
-		String col1 = tableMap1.get(colName);
-						
-		//split the column number and type into an array
-		String[] str1 = col1.split(",");
-				
-		//get the column number, cast to Integer;
-		int colNum = Integer.valueOf(str1[0]);
-		
+		HashMap<String, String> tableMap1 = schema.get(tableName);
+		int colNum = -1;
+	
+		//check if table contain this colName
+		//get the column number
+		if(tableMap1.containsKey(colName)){
+			String col1 = tableMap1.get(colName);
+					
+			//split the column number and type into an array
+			String[] str1 = col1.split(",");
+							
+			//get the column number, cast to Integer;
+			colNum = Integer.valueOf(str1[0]);
+		}
 		return colNum;
 	}
 	
-	public static String getColType(HashMap<String, HashMap<String, String>> scheme,
+	public static String getColType(HashMap<String, HashMap<String, String>> schema,
 			String tableName, String colName){
 		//get the column information
-		HashMap<String, String> tableMap1 = scheme.get(tableName);
-						
-		//get the column number and type
-		String col1 = tableMap1.get(colName);
-						
-		//split the column number and type into an array
-		String[] str1 = col1.split(",");
+		HashMap<String, String> tableMap1 = schema.get(tableName);
+		String colType = "-";
 				
-		//get the type;
-		String colType = str1[1];
-		
+		//check if table contain this colName
+		//get the column number and type
+		if(tableMap1.containsKey(colName)){
+			String col1 = tableMap1.get(colName);
+			//split the column number and type into an array
+			String[] str1 = col1.split(",");
+							
+			//get the type;
+			colType = str1[1];
+		}
 		return colType;
 	}
+	
+//	public static String getTableName(StringBuilder row){
+//		String tableName = "";
+//		String[] str = row.toString().split("\\|");
+//		tableName = str[str.length-1];	
+//		return tableName;
+//	}
+//	
+
 	
 	
 	

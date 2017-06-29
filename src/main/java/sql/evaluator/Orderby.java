@@ -1,4 +1,4 @@
-package sql.evaluator;
+package ParseSqlQuery;
 
 import java.io.BufferedReader;
 import java.io.File;

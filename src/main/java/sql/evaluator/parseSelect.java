@@ -59,6 +59,9 @@ public class parseSelect {
 		List<OrderByElement> orderByItemList = ((PlainSelect) selectBd).getOrderByElements();
 		/* where conditions */
 		Expression whereEx = ((PlainSelect) selectBd).getWhere();
+		/* having conditions */
+		Expression havingEx = ((PlainSelect) selectBd).getHaving();
+		
 		List<Expression> whereList = new ArrayList<Expression>();
 		List<Expression> condition = new ArrayList<Expression>();
 		
@@ -223,6 +226,8 @@ public class parseSelect {
 				}
 			}
 		}
+		
+		/** 
 
 		/** Print out the query evaluated result **/
 		StringBuilder res = new StringBuilder();
@@ -403,5 +408,9 @@ public class parseSelect {
 			}
 		}
 		return join;
+	}
+	
+	public ArrayList<String> getFromTable() {
+		return fromTable;
 	}
 }

@@ -33,7 +33,6 @@ public class scan {
 				
 				if(count==lineNum){
 					sb.append(line);
-					sb.append("|"+tableName);
 				}
 			}
 			lineNum++;
@@ -98,11 +97,12 @@ public class scan {
 		return flag;
 	}
 
-
-	@Override
-	public String toString() {
-		return "scan [lineNum=" + lineNum + "]";
+	public void setFlag(boolean flag) {
+		this.flag = flag;
 	}
+
+
+	
 	
 	
 }
