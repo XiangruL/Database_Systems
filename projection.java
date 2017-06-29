@@ -5,27 +5,39 @@ import java.util.HashMap;
 
 public class projection {
 	public ArrayList<StringBuilder> proTable(ArrayList<StringBuilder> result,
-			HashMap<String, HashMap<String, String>> scheme, 
+			HashMap<String, HashMap<String, String>> schema, 
 			StringBuilder row,String query,int index){
-		//get table name
-		String[] rowString = row.toString().split("\\|");
-		String tableName = rowString[rowString.length-1];
-		//parse query to get column name
-		String[] qstr = query.split(",");
-		StringBuilder sb = new StringBuilder();
-		for (int i = 0; i < qstr.length; i++) {
-			int colNum = tool.getColNum(scheme, tableName, qstr[i]);
-			if(i == qstr.length-1){
-				sb.append(rowString[colNum]);
-				break;
+		
+		if(row.length()>0){
+			//Parse the query, then get table name and column name
+			String[] qstr = query.split(", ");
+			
+			String[] rowString = row.toString().split("\\|");
+			String tableName;
+			String colName;
+			int colNum;
+			StringBuilder sb = new StringBuilder();
+			for (int i = 0; i < qstr.length; i++) {
+				String[] tcName = qstr[i].split("\\.");
+				tableName = tcName[0];
+				colName = tcName[1];
+			
+				colNum = tool.getColNum(schema, tableName, colName);
+			
+				if(i == qstr.length-1){
+					sb.append(rowString[colNum]);
+					break;
+				}
+				sb.append(rowString[colNum]+",");
 			}
-			sb.append(rowString[colNum]+",");
+			
+			if(index != -1){
+				result.add(index, sb);
+			}else{
+				result.add(sb);
+			}
 		}
-		if(index != -1){
-			result.add(index, sb);
-		}else{
-			result.add(sb);
-		}
+		
 		
 		return result;
 	}
