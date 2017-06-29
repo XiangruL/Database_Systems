@@ -100,9 +100,5 @@ public class scan {
 	public void setFlag(boolean flag) {
 		this.flag = flag;
 	}
-
-
-	
-	
 	
 }

@@ -104,7 +104,4 @@ public class join {
 		return newSchema;
 	}
 
-	
-	
-	
 }

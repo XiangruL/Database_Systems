@@ -30,7 +30,7 @@ public class projection {
 						return result;
 					}
 					tableName = tName.get(0);
-					colName = qstr[i].toLowerCase();
+					colName = qstr[i];
 				}
 				
 				colNum = tool.getColNum(schema, tableName, colName);

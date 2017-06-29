@@ -31,8 +31,8 @@ public class select {
 				return sb;
 			}
 			tableName = tName.get(0);
-			colName = qstr[0];
-			System.out.println(tableName);
+			colName = qstr[0].toLowerCase();
+			
 		}
 		
 		
