@@ -10,7 +10,10 @@ import net.sf.jsqlparser.expression.BinaryExpression;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.ExpressionVisitor;
 import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
+import net.sf.jsqlparser.expression.operators.conditional.OrExpression;
 import net.sf.jsqlparser.expression.operators.relational.EqualsTo;
+import net.sf.jsqlparser.expression.operators.relational.GreaterThan;
+import net.sf.jsqlparser.expression.operators.relational.GreaterThanEquals;
 import net.sf.jsqlparser.expression.operators.relational.LikeExpression;
 import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.create.table.ColumnDefinition;
@@ -27,7 +30,7 @@ public class parseSelect {
 	private static final Logger LOGGER = Logger.getLogger( parserTest.class.getName() );
 	private static ArrayList<String> joinTable;
 	private static ArrayList<String> whereCondition;
-	private static ArrayList<String> havingCondition;
+	private static ArrayList<Expression> havingCondition;
 	private static ArrayList<String> fromTable;
 	private static ArrayList<String> projectTable;
 
@@ -66,7 +69,7 @@ public class parseSelect {
 		List<Expression> condition = new ArrayList<Expression>();
 		
 		whereCondition = new ArrayList<String>();
-		havingCondition = new ArrayList<String>(); 
+		havingCondition = new ArrayList<Expression>(); 
 		joinTable = new ArrayList<String>();
 		projectTable = new ArrayList<String>();
 		
@@ -149,7 +152,7 @@ public class parseSelect {
 				}
 			}
 		}
-		select.insert(0, "SELCTION: ");
+		select.insert(0, "SELECTION: ");
 		project.append("PROJECTION: ");
 		project.append(projectTable.toString().substring(1, projectTable.toString().length() - 1));
 		
@@ -227,7 +230,19 @@ public class parseSelect {
 			}
 		}
 		
-		/** 
+		
+		
+		/** get having **/
+		StringBuilder having = new StringBuilder();
+		// having contains and
+		if (havingEx instanceof AndExpression) {
+			havingCondition = (ArrayList<Expression>) visit((AndExpression) havingEx);
+		// there is a single where statement
+		} else if (havingEx instanceof OrExpression) {
+			havingCondition = (ArrayList<Expression>) visitOr((OrExpression) havingEx);
+		} else {
+			havingCondition.add(havingEx);
+		}
 
 		/** Print out the query evaluated result **/
 		StringBuilder res = new StringBuilder();
@@ -243,8 +258,10 @@ public class parseSelect {
 		res.append(join);
 		res.append(groupBy);
 		res.append(orderBy);
-	//	res.append(whereCondition);
-	//	res.append(where);
+//		res.append(whereCondition);
+//		res.append(where);
+//		res.append(whereCondition.toString());
+//		res.append(havingCondition.toString());
 		System.out.println(res.toString());
 		
 		parseSelect.algebraGen();
@@ -282,7 +299,7 @@ public class parseSelect {
 				System.out.println("cannot find tthis table name");
 			}
 		}
-		s.append(" ");
+//		s.append(" ");
 		return s;
 	}
 	
@@ -294,6 +311,7 @@ public class parseSelect {
 		boolean stopFlag = true;
 		ArrayList<scan> scanners = new ArrayList<scan>();
 		ArrayList<StringBuilder> result = new ArrayList<StringBuilder>();
+		HashMap<String, HashMap<String, String>>  schema = createTable.allTable;
 		String query = "";
 		for (String s : fromTable) {
 			scan current = new scan(s);
@@ -302,20 +320,28 @@ public class parseSelect {
 		}
 		while (!stopFlag) {
 //		for (int i = 0; i < 1; i++) {
-
 			StringBuilder temp = scanners.get(0).scanFile();
 			stopFlag =  scanners.get(0).isFlag();
-
+			schema = createTable.allTable;
 			/* join */
 			if (joinTable.size() == 0) {
 				
 			} else {
-//				startFlag = true;
+				stopFlag &= scanners.get(1).isFlag();
+				// joinRow(HashMap<String, HashMap<String, String>> schema, StringBuilder row1, StringBuilder row2, String query, boolean flag)
+				query = joinTable.get(0);
+				temp = join.joinRow(schema, temp, scanners.get(1).scanFile(), query, stopFlag);
+//				System.out.println(temp);
+				schema = join.getNewSchema();
 			}
+			if (temp.length() == 0)
+				continue;
 			/* where condition */
 			if (whereCondition.size() != 0) {
 				for (String s : whereCondition) {
-					temp = select.selectRow(createTable.allTable, temp, s);
+					temp = select.selectRow(schema, temp, s);
+//					System.out.println(temp);
+
 					// not meet the select requirement
 					if (temp == null) {
 						break;
@@ -326,7 +352,7 @@ public class parseSelect {
 				continue;
 			/* projection */
 			query = projectTable.toString().substring(1, projectTable.toString().length() - 1);
-			result = projection.proTable(result, createTable.allTable, temp, query, -1);
+			result = projection.proTable(result, schema, temp, query, -1);
 					
 		}
 		for (StringBuilder s : result)
@@ -336,13 +362,27 @@ public class parseSelect {
 	}
 
 	
-	/** parse where statement containing and
+	/** parse where/having statement containing and
 	 *  return a list of seperated condition **/
 	public static List<Expression> visit(AndExpression expr) {
 		List<Expression> list = new ArrayList<Expression>();
 		list.add(expr.getRightExpression());
 		Expression ex = expr.getLeftExpression();
         while(ex instanceof AndExpression) { 
+        	list.add(((BinaryExpression) ex).getRightExpression());
+        	ex = ((BinaryExpression) ex).getLeftExpression();
+        }
+        list.add((BinaryExpression) ex);
+        return list;
+    }
+	
+	/** parse where/having statement containing or
+	 *  return a list of seperated condition **/
+	public static List<Expression> visitOr(OrExpression expr) {
+		List<Expression> list = new ArrayList<Expression>();
+		list.add(expr.getRightExpression());
+		Expression ex = expr.getLeftExpression();
+        while(ex instanceof OrExpression) { 
         	list.add(((BinaryExpression) ex).getRightExpression());
         	ex = ((BinaryExpression) ex).getLeftExpression();
         }
@@ -370,7 +410,7 @@ public class parseSelect {
 				tempWhereL = aliasToName(leftE.toString(), tempWhereL);		
 				tempWhereR = aliasToName(rightE.toString(), tempWhereR);
 				tempWhere.append(tempWhereL);
-				tempWhere.append("= ");
+				tempWhere.append(" = ");
 				tempWhere.append(tempWhereR);
 				joinTable.add(tempWhere.toString().toLowerCase());
 				// left expression doesn't show in join yet
@@ -379,7 +419,7 @@ public class parseSelect {
 					join.append(", ");
 				}
 				// right expression doesn't show in join yet
-				if (join.toString().contains(tempWhereR.toString())) {
+				if (!join.toString().contains(tempWhereR.toString())) {
 					join.append(tempWhereR);
 					join.append(", ");
 				}
@@ -410,7 +450,23 @@ public class parseSelect {
 		return join;
 	}
 	
-	public ArrayList<String> getFromTable() {
+	/* parse where condition */
+	public static String parseWhereCondition(Expression s) {
+		if (s instanceof EqualsTo) {
+			
+		} else if (s instanceof GreaterThan) {
+			
+		} else if (s instanceof GreaterThanEquals) {
+			
+		} else if (s instanceof LikeExpression) {
+			
+		} else {
+			
+		}
+		return s.toString();
+	}
+	
+	public static ArrayList<String> getFromTable() {
 		return fromTable;
 	}
 }
