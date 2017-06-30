@@ -55,10 +55,8 @@ public class aggregation {
 				acolName = tcName;
 			}
 		}
-		System.out.println(atableName);
-		System.out.println(acolName);
-		System.out.println(gtableName);
-		System.out.println(gcolName);
+		int gcolNum = tool.getColNum(schema, gtableName, gcolName);
+		int acolNum = tool.getColNum(schema, atableName, acolName);
 		
 		switch (operator) {
 		case "count":
@@ -66,6 +64,8 @@ public class aggregation {
 			break;
 		
 		case "sum":
+			
+			
 			
 			break;
 			
