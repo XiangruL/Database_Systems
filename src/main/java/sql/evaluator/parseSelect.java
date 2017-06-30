@@ -27,6 +27,7 @@ import net.sf.jsqlparser.statement.select.PlainSelect;
 public class parseSelect {
 	
 	private static HashMap<String, String> aliasNameMap = new HashMap<String, String>();
+	private static HashMap<String, HashMap<String, String>>  schema = createTable.allTable;
 	private static final Logger LOGGER = Logger.getLogger( parserTest.class.getName() );
 	private static ArrayList<String> joinTable;
 	private static ArrayList<String> whereCondition;
@@ -309,55 +310,70 @@ public class parseSelect {
 		// no join
 //		boolean startFlag = false;
 		boolean stopFlag = true;
+		boolean stopFlag2 = true;
 		ArrayList<scan> scanners = new ArrayList<scan>();
 		ArrayList<StringBuilder> result = new ArrayList<StringBuilder>();
-		HashMap<String, HashMap<String, String>>  schema = createTable.allTable;
 		String query = "";
-		for (String s : fromTable) {
-			scan current = new scan(s);
-			scanners.add(current);
-			stopFlag &= current.isFlag();
-		}
-		while (!stopFlag) {
-//		for (int i = 0; i < 1; i++) {
-			StringBuilder temp = scanners.get(0).scanFile();
-			stopFlag =  scanners.get(0).isFlag();
-			schema = createTable.allTable;
-			/* join */
-			if (joinTable.size() == 0) {
-				
-			} else {
-				stopFlag &= scanners.get(1).isFlag();
-				// joinRow(HashMap<String, HashMap<String, String>> schema, StringBuilder row1, StringBuilder row2, String query, boolean flag)
-				query = joinTable.get(0);
-				temp = join.joinRow(schema, temp, scanners.get(1).scanFile(), query, stopFlag);
-//				System.out.println(temp);
-				schema = join.getNewSchema();
-			}
-			if (temp.length() == 0)
-				continue;
-			/* where condition */
-			if (whereCondition.size() != 0) {
-				for (String s : whereCondition) {
-					temp = select.selectRow(schema, temp, s);
-//					System.out.println(temp);
+//		for (String s : fromTable) {
+//			scan current = new scan(s);
+//			scanners.add(current);
+//			stopFlag &= current.isFlag();
+//		}
+		scan scanner1 = new scan(fromTable.get(0));
+		scan scanner2 = new scan(fromTable.get(1));
+		stopFlag = scanner1.isFlag() & scanner2.isFlag();
+//		stopFlag2 = scanner2.isFlag();
 
-					// not meet the select requirement
-					if (temp == null) {
-						break;
+		while (!scanner1.isFlag()) {
+			stopFlag = scanner1.isFlag() & scanner2.isFlag();
+			StringBuilder temp2 = joinTwoTable(scanner1, scanner2, joinTable.get(0));
+			System.out.println(temp2);
+////		for (int i = 0; i < 1; i++) {
+//			StringBuilder temp = scanner1.scanFile();
+//			schema = createTable.allTable;
+//			if (scanner2.isFlag()) {
+//				scanner2.setFlag(false);;
+//			}
+//
+//			/* join */
+//			if (joinTable.size() == 0) {
+//				System.out.println("in");
+//
+//			} else {
+//				while(!scanner2.isFlag()) {
+//					//stopFlag &= scanners.get(1).isFlag();
+//					// joinRow(HashMap<String, HashMap<String, String>> schema, StringBuilder row1, StringBuilder row2, String query, boolean flag)
+//					StringBuilder temp2 = new StringBuilder();
+//					query = joinTable.get(0);
+//					temp2 = join.joinRow(createTable.allTable, temp, scanner2.scanFile(), query, false);
+//					schema = join.getNewSchema();
+					//				System.out.println(schema.values());
+
+//					if (temp2.length() > 0) 
+//						System.out.println(temp);
+
+					/* where condition */
+					if (whereCondition.size() != 0) {
+						for (String s : whereCondition) {
+							temp2 = select.selectRow(schema, temp2, s);
+							//						System.out.println(temp);
+
+							// not meet the select requirement
+							if (temp2 == null) {
+								break;
+							}
+						}
 					}
-				}
+
+					/* projection */
+					query = projectTable.toString().substring(1, projectTable.toString().length() - 1);
+					result = projection.proTable(result, schema, temp2, query, -1);
+
 			}
-			if (temp == null)
-				continue;
-			/* projection */
-			query = projectTable.toString().substring(1, projectTable.toString().length() - 1);
-			result = projection.proTable(result, schema, temp, query, -1);
-					
-		}
+
 		for (StringBuilder s : result)
 			System.out.println(s.toString());
-		
+
 		return null;
 	}
 
@@ -468,5 +484,32 @@ public class parseSelect {
 	
 	public static ArrayList<String> getFromTable() {
 		return fromTable;
+	}
+	
+	public static StringBuilder joinTwoTable(scan scanner1, scan scanner2, String query) {
+		boolean flag = scanner1.isFlag();
+		while (!scanner1.isFlag()) {
+			//			for (int i = 0; i < 1; i++) {
+			StringBuilder temp = scanner1.scanFile();
+			if (scanner2.isFlag()) {
+				scanner2.setFlag(false);;
+			}
+
+			while(!scanner2.isFlag()) {
+				//stopFlag &= scanners.get(1).isFlag();
+				// joinRow(HashMap<String, HashMap<String, String>> schema, StringBuilder row1, StringBuilder row2, String query, boolean flag)
+				StringBuilder temp2 = new StringBuilder();
+				temp2 = join.joinRow(createTable.allTable, temp, scanner2.scanFile(), query, flag);
+				if (!flag) {
+					parseSelect.schema = join.getNewSchema();
+					flag = true;
+				}
+				if (temp2 != null && temp2.length() > 0) {
+					return temp2;
+				}
+			}
+		}
+		
+		return new StringBuilder();
 	}
 }
