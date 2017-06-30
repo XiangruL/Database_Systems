@@ -39,14 +39,15 @@ public class join {
 			}
 			
 			if(rowString1[colNum1].equals(rowString2[colNum2])){
-				
+			
 				for (int i = 0; i < rowString2.length; i++) {
-					if(!rowString2[i].equals(colName2)){
+					if(i!=colNum2){
 						if(i == rowString2.length-1){
-							row.append(rowString2[i]);
+							row.append("|"+rowString2[i]);
 							break;
 						}
-						row.append(rowString2[i]+"|");
+						
+						row.append("|"+rowString2[i]);
 					}
 				}
 				

@@ -34,7 +34,7 @@ public class projection {
 				}
 				
 				colNum = tool.getColNum(schema, tableName, colName);
-			
+				
 				if(i == qstr.length-1){
 					sb.append(rowString[colNum]);
 					break;
