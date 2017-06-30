@@ -5,27 +5,60 @@ import java.util.HashMap;
 
 public class aggregation {
 	
-	public ArrayList<StringBuilder> aggRow(HashMap<String, HashMap<String, String>> schema,
-			StringBuilder row1, ArrayList<StringBuilder> result, String query){
+	public static ArrayList<StringBuilder> aggRow(HashMap<String, HashMap<String, String>> schema,
+			ArrayList<StringBuilder> result, String aggQuery, String groupQuery){
 		
-		//Ex. query = "count(author.instituteid)" 
-		//Ex. query = "count(instituteid)";
+		//Ex. aggQuery = "count(author.instituteid)" 
+		//Ex. aggQuery = "count(instituteid)";
+		//Ex. aggQuery = "count(author.*)" ;
+		//Ex. aggQuery = "count(*)";
 		
-		String[] qstr = query.split("\\(");
+		//parse groupby query, get the groupby table name and column name
+		String gtableName;
+		String gcolName;
+		if(groupQuery.contains(".")){
+			String[] gqstr = groupQuery.split("\\.");
+			gtableName = gqstr[0];
+			gcolName = gqstr[1];
+		}else{
+			
+			ArrayList<String> tName = parseSelect.getFromTable();
+			if(tName.size()!=1){
+				System.err.println("do not specify table name");
+				return result;
+			}
+			gtableName = tName.get(0);
+			gcolName = groupQuery;
+			
+		}
+	
+		//parse the aggQuery get the table name and column name
+		String[] qstr = aggQuery.split("\\(");
 		String operator = qstr[0];
 		String tcName = qstr[1].substring(0,qstr[1].length()-1);
-		String tableName = "";
-		String colName = "";
-		if(tcName.contains(".")){
-			String[] tcNames = tcName.split("\\.");
-			tableName = tcNames[0];
-			colName = tcNames[1];
+		String atableName = "";
+		String acolName = "";
+		if(tcName.contains("*")){
+			acolName = gcolName;
+			if(tcName.contains(".")){
+				atableName = tcName.split("\\.")[0];
+			}else{
+				atableName = gtableName;
+			}
 		}else{
-			ArrayList<String> tName = new ArrayList<>();
-			tName= parseSelect.getFromTable();
-			tableName = tName.get(0);
-			colName = tcName;
+			if(tcName.contains(".")){
+				String[] tcNames = tcName.split("\\.");
+				atableName = tcNames[0];
+				acolName = tcNames[1];
+			}else{
+				atableName = gtableName;
+				acolName = tcName;
+			}
 		}
+		System.out.println(atableName);
+		System.out.println(acolName);
+		System.out.println(gtableName);
+		System.out.println(gcolName);
 		
 		switch (operator) {
 		case "count":
