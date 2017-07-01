@@ -29,7 +29,9 @@ public class parseSelect {
 	private static HashMap<String, String> aliasNameMap = new HashMap<String, String>();
 	private static HashMap<String, HashMap<String, String>>  schema = createTable.allTable;
 	private static final Logger LOGGER = Logger.getLogger( parserTest.class.getName() );
+	/* containing join condition, "table1.PID = table2.ID" */
 	private static ArrayList<String> joinTable;
+	private static ArrayList<Expression> condition;
 	private static ArrayList<String> whereCondition;
 	private static ArrayList<Expression> havingCondition;
 	private static ArrayList<String> fromTable;
@@ -67,8 +69,8 @@ public class parseSelect {
 		Expression havingEx = ((PlainSelect) selectBd).getHaving();
 		
 		List<Expression> whereList = new ArrayList<Expression>();
-		List<Expression> condition = new ArrayList<Expression>();
 		
+		condition = new ArrayList<Expression>();
 		whereCondition = new ArrayList<String>();
 		havingCondition = new ArrayList<Expression>(); 
 		joinTable = new ArrayList<String>();
@@ -211,7 +213,7 @@ public class parseSelect {
 				if (e instanceof EqualsTo) {
 					join = parseEqualTo(e, aliasFlag, join);
 				} else {
-					parseSelect.whereCondition.add(e.toString());
+					condition.add(e);
 				}
 				where.append(e.toString().toLowerCase());
 				where.append("\n");
@@ -223,12 +225,15 @@ public class parseSelect {
 			} else {
 				if (whereEx != null) {
 					where.append(whereEx.toString().toLowerCase());
-					whereCondition.add(whereEx.toString());
+					condition.add(whereEx);
 				} else {
 					// no where statement
 					where.append(whereEx);
 				}
 			}
+		}
+		for (Expression e : condition) {
+			whereCondition.add(parseWhereCondition(e));
 		}
 		
 		
@@ -306,9 +311,9 @@ public class parseSelect {
 	
 	
 	/** generate relation algebra **/
-	public static StringBuilder algebraGen() {
+	public static void algebraGen() {
 		// no join
-//		boolean startFlag = false;
+		boolean startFlag = true;
 		boolean stopFlag = true;
 		boolean stopFlag2 = true;
 		ArrayList<scan> scanners = new ArrayList<scan>();
@@ -321,60 +326,34 @@ public class parseSelect {
 //		}
 		scan scanner1 = new scan(fromTable.get(0));
 		scan scanner2 = new scan(fromTable.get(1));
+		// when table1 and table2 at the bottom, stopFlag becomes true
 		stopFlag = scanner1.isFlag() & scanner2.isFlag();
-//		stopFlag2 = scanner2.isFlag();
 
-		while (!scanner1.isFlag()) {
+		while (!stopFlag) {
+			StringBuilder temp2 = joinTwoTable(scanner1, scanner2, joinTable.get(0), startFlag);
 			stopFlag = scanner1.isFlag() & scanner2.isFlag();
-			StringBuilder temp2 = joinTwoTable(scanner1, scanner2, joinTable.get(0));
-			System.out.println(temp2);
-////		for (int i = 0; i < 1; i++) {
-//			StringBuilder temp = scanner1.scanFile();
-//			schema = createTable.allTable;
-//			if (scanner2.isFlag()) {
-//				scanner2.setFlag(false);;
-//			}
-//
-//			/* join */
-//			if (joinTable.size() == 0) {
-//				System.out.println("in");
-//
-//			} else {
-//				while(!scanner2.isFlag()) {
-//					//stopFlag &= scanners.get(1).isFlag();
-//					// joinRow(HashMap<String, HashMap<String, String>> schema, StringBuilder row1, StringBuilder row2, String query, boolean flag)
-//					StringBuilder temp2 = new StringBuilder();
-//					query = joinTable.get(0);
-//					temp2 = join.joinRow(createTable.allTable, temp, scanner2.scanFile(), query, false);
-//					schema = join.getNewSchema();
-					//				System.out.println(schema.values());
+			startFlag = false;
 
-//					if (temp2.length() > 0) 
-//						System.out.println(temp);
+			/* where condition */
+			if (whereCondition.size() != 0) {
+				for (String s : whereCondition) {
+					temp2 = select.selectRow(schema, temp2, s);
+					//						System.out.println(temp);
 
-					/* where condition */
-					if (whereCondition.size() != 0) {
-						for (String s : whereCondition) {
-							temp2 = select.selectRow(schema, temp2, s);
-							//						System.out.println(temp);
-
-							// not meet the select requirement
-							if (temp2 == null) {
-								break;
-							}
-						}
+					// not meet the select requirement
+					if (temp2 == null) {
+						break;
 					}
-
-					/* projection */
-					query = projectTable.toString().substring(1, projectTable.toString().length() - 1);
-					result = projection.proTable(result, schema, temp2, query, -1);
-
+				}
 			}
+
+			/* projection */
+			query = projectTable.toString().substring(1, projectTable.toString().length() - 1);
+			result = projection.proTable(result, schema, temp2, query, -1);
+		}
 
 		for (StringBuilder s : result)
 			System.out.println(s.toString());
-
-		return null;
 	}
 
 	
@@ -441,7 +420,7 @@ public class parseSelect {
 				}
 			} else {
 				// it's selection condition not for joining
-				parseSelect.whereCondition.add(e.toString());
+				condition.add(e);
 			}
 		} else {
 			// right expression contains ".", means it's join condition
@@ -460,16 +439,27 @@ public class parseSelect {
 					join.append(", ");
 				}
 			} else {
-				parseSelect.whereCondition.add(e.toString());
+				condition.add(e);
 			}
 		}
 		return join;
 	}
-	
-	/* parse where condition */
+
+	/** parse where condition
+	 * if there is alias in the left expression, change it to full name 
+	 * 
+	 * @param s - where condition, eg "T.name = 1"
+	 * @return - return full name with condition, eg "table.name = 1"
+	 */
 	public static String parseWhereCondition(Expression s) {
 		if (s instanceof EqualsTo) {
-			
+			Expression rightE = ((EqualsTo) s).getRightExpression();
+			Expression leftE = ((EqualsTo) s).getLeftExpression();
+			StringBuilder temp = new StringBuilder();
+			temp = aliasToName(leftE, temp);
+			temp.append(" = ");
+			temp.append(rightE.toString());
+			return temp.toString();		
 		} else if (s instanceof GreaterThan) {
 			
 		} else if (s instanceof GreaterThanEquals) {
@@ -482,22 +472,41 @@ public class parseSelect {
 		return s.toString();
 	}
 	
+	/** 
+	 * @return fromTable containing from item
+	 */
 	public static ArrayList<String> getFromTable() {
 		return fromTable;
 	}
 	
-	public static StringBuilder joinTwoTable(scan scanner1, scan scanner2, String query) {
+	
+	/** This method use to join two tables, return the first row match the joining condition
+	 * 
+	 * @param scanner1 - scan for table 1
+	 * @param scanner2 - scan for table 2
+	 * @param query - join condition, ex "t1.a = t2.b"
+	 * @param startFlag - true if it's first time to enter the join
+	 * @return
+	 */
+	public static StringBuilder joinTwoTable(scan scanner1, scan scanner2, String query, boolean startFlag) {
 		boolean flag = scanner1.isFlag();
+		StringBuilder temp = new StringBuilder();
 		while (!scanner1.isFlag()) {
-			//			for (int i = 0; i < 1; i++) {
-			StringBuilder temp = scanner1.scanFile();
-			if (scanner2.isFlag()) {
-				scanner2.setFlag(false);;
+			// table1 first enter the join method, need to scan a line
+			if (startFlag) {
+				temp = scanner1.scanFile();
+			} else {
+				// table1 need to scan a line when scanner 2 reach the bottom
+				if (scanner2.isFlag()) {
+					temp = scanner1.scanFile();
+				}
 			}
-
+			// table1 not at the bottom but table2 do, loop table2
+			if (!scanner1.isFlag() && scanner2.isFlag()) {		
+				scanner2.setFlag(false);
+			}
+			// table2 does not reach the bottom
 			while(!scanner2.isFlag()) {
-				//stopFlag &= scanners.get(1).isFlag();
-				// joinRow(HashMap<String, HashMap<String, String>> schema, StringBuilder row1, StringBuilder row2, String query, boolean flag)
 				StringBuilder temp2 = new StringBuilder();
 				temp2 = join.joinRow(createTable.allTable, temp, scanner2.scanFile(), query, flag);
 				if (!flag) {
@@ -509,7 +518,7 @@ public class parseSelect {
 				}
 			}
 		}
-		
+		// no match at these two table, return an empty string builder
 		return new StringBuilder();
 	}
 }
