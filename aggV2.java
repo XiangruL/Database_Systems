@@ -140,6 +140,9 @@ public class aggV2 {
 			break;
 	
 		case "min":
+			
+			
+			
 			String [] firstRec = result.get(0).toString().split("\\|");
 			String record =firstRec[acolNum] ;
 			String answer = firstRec[acolNum] + "|" + "0";
@@ -175,6 +178,10 @@ public class aggV2 {
 			break;
 	
 		case "max":
+			acolNum= 2;
+			aclotype = "varchar";
+			int oriLen = result.get(0).toString().split("\\|").length;
+//			String [] temp = result.get(i).toString().split("\\|");
 			String [] firstRec1 = result.get(0).toString().split("\\|");
 			String record1 =firstRec1[acolNum] ;
 			String answer1 = firstRec1[acolNum] + "|" + "0";
@@ -198,15 +205,27 @@ public class aggV2 {
 			}
 			System.out.println(record1);
 			System.out.println(answer1);
+			StringBuilder mysb = new StringBuilder();
+			mysb.append("|"  +record1);
+			StringBuilder mynull = new StringBuilder();
+			mynull.append("|"  +"null");
 			String[] addBack1 = answer1.split("\\|");
 			for (int i =1 ; i<addBack1.length;i++){
 				
 				System.out.println(addBack1[i]);
-				StringBuilder mysb = new StringBuilder();
-				mysb.append("|"  +record1);
+				
+				
 				result.get(Integer.valueOf(addBack1[i])).append(mysb);
+				//System.out.println(i);
 			}
 
+			for ( int i =0 ; i< result.size();i++){
+				String [] temp = result.get(i).toString().split("\\|");
+				if (temp.length==oriLen){
+					result.get(i).append(mynull);
+					System.out.println("has" +i);
+				}
+			}
 			break;
 
 		default:
