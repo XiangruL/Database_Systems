@@ -10,7 +10,6 @@ public class aggregation {
 	//aggregation with groupBy
 	public static ArrayList<StringBuilder> aggRow(HashMap<String, HashMap<String, String>> schema,
 			ArrayList<StringBuilder> result, String aggQuery, String groupQuery){
-		StringBuilder sb = new StringBuilder();
 		//Ex. aggQuery = "count(author.instituteid)" 
 		//Ex. aggQuery = "count(instituteid)";
 		//Ex. aggQuery = "count(author.*)" ;
@@ -63,32 +62,17 @@ public class aggregation {
 		
 		switch (operator) {
 		case "count":
+			updateResult(result, count(schema,operator,result, acolNum, gcolNum));
 			
 			break;
 		
 		case "sum":
-			String row;
-			String[] rowStrings;
-			String dataFlag="";
-			int sum = 0;
-			for (int i = 0; i < result.size(); i++) {
-				sb = result.get(i);
-				row = sb.toString();
-				rowStrings = row.split("\\|");
-				if(i ==0){
-					dataFlag = rowStrings[gcolNum];
-				}
-				if(dataFlag.equals(rowStrings[gcolNum])){
-					
-				}
-			}
-			
-			
+			updateResult(result, sum(schema,operator,result, acolNum, gcolNum));
 			
 			break;
 			
 		case "avg":
-	
+			updateResult(schema, operator, result, acolNum, gcolNum);
 			break;
 	
 		case "min":
@@ -142,11 +126,8 @@ public class aggregation {
 			break;
 		
 		case "sum":
-			String row;
-			String[] rowStrings;
-			String dataFlag="";
-			int sum = 0;
 			
+			 
 			
 			
 			
@@ -181,11 +162,11 @@ public class aggregation {
 	
 	//update schema
 	public static HashMap<String, HashMap<String, String>> updateSchema(HashMap<String, HashMap<String, String>> schema, 
-			String colName,String[] row){
+			String operator,String[] row){
 		if(schema.containsKey("agg")){
-			addNewCol(schema, colName);
+			addNewCol(schema, operator);
 		}else{
-			addNewTable(schema, colName, row);
+			addNewTable(schema, operator, row);
 		}
 		return schema;
 	}
@@ -239,6 +220,294 @@ public class aggregation {
 	public static String getColNum(String[] row){
 		String colNum = String.valueOf(row.length);
 		return colNum;
+	}
+	
+	//return result after aggregation
+	public static void updateResult(ArrayList<StringBuilder> result,ArrayList<String> posCount){
+		//update result
+		int index = 0;
+		int begin = 0;
+		String countResult;
+		for (int i = 0; i < posCount.size(); i++) {
+			index = Integer.valueOf(posCount.get(i).split(",")[0]);
+			countResult = posCount.get(i).split(",")[1];
+			
+			for (int j = begin; j <= index; j++) {
+				result.get(j).append("|"+ countResult);
+				
+			}
+			begin = index+1;
+		}
+		
+
+	}
+	
+	//return avg result after aggregation
+	public static void updateResult(HashMap<String, HashMap<String, String>> schema,
+			String operator, ArrayList<StringBuilder> result, int acolNum, int gcolNum){
+		String[] rowStrings;
+		String posAvgString;
+		ArrayList<String> posAvg = new ArrayList<>();
+		String gdataFlag = "";
+		String dataFlag = "";
+		ArrayList<String> posCount = count(result, acolNum, gcolNum);
+		ArrayList<String> posSum = sum(result, acolNum, gcolNum);
+		//update result
+		int index = 0;
+		int begin = 0;
+		double avg;
+		String countResult;
+		String sumResult;
+		
+		for (int i = 0; i < posSum.size(); i++) {
+			if(i ==0){
+				rowStrings = result.get(i).toString().split("\\|");
+				updateSchema(schema, operator, rowStrings);
+			}
+			index = Integer.valueOf(posSum.get(i).split(",")[0]);
+			countResult = posCount.get(i).split(",")[1];
+			sumResult =  posSum.get(i).split(",")[1];
+			avg = (Double.valueOf(sumResult))/(Double.valueOf(countResult));
+			for (int j = begin; j <= index; j++) {
+				result.get(j).append("|"+ avg);
+				
+			}
+			begin = index+1;
+		}
+	}
+	
+	
+	//with updating schema
+	public static ArrayList<String> count(HashMap<String, HashMap<String, String>> schema,
+			String operator, ArrayList<StringBuilder> result, int acolNum, int gcolNum){
+		int count = 0;
+		String gdataFlag = "";
+		String dataFlag = "";
+		String[] rowStrings;
+		//String is consisted like (the last position,count)
+		String posCouString;
+		ArrayList<String> posCount = new ArrayList<>();
+		
+		if(gcolNum == acolNum){//the column which is grouby and count is the same column
+			for (int i = 0; i < result.size(); i++) {
+				rowStrings = result.get(i).toString().split("\\|");
+				
+				//assign dataFlag
+				//update schema
+				if(i==0){
+					dataFlag = rowStrings[acolNum];
+					updateSchema(schema,operator,rowStrings);
+				}
+				if(dataFlag.equals(rowStrings[acolNum])){
+					count++;
+					if(i == result.size()-1){
+						posCouString = i + "," + count;
+						posCount.add(posCouString);
+					}
+				}else{
+					posCouString = i-1 + "," + count;
+					posCount.add(posCouString);
+					dataFlag = rowStrings[acolNum];
+					count = 1;
+					if(i == result.size()-1){
+						posCouString = i + "," + count;
+						posCount.add(posCouString);
+					}
+				}
+				
+			}
+			
+		}else{//the column which is grouby and count is not the same column
+			
+			for (int i = 0; i < result.size(); i++) {
+				rowStrings = result.get(i).toString().split("\\|");
+				dataFlag = rowStrings[acolNum];
+				
+				if(i == 0){
+					gdataFlag = rowStrings[gcolNum];
+					updateSchema(schema,operator,rowStrings);
+				}
+				
+				if(gdataFlag.equals(rowStrings[gcolNum])){
+					if(!dataFlag.equalsIgnoreCase("null")){
+						count++;
+					}
+					if(i == result.size()-1){
+						posCouString = i + "," + count;
+						posCount.add(posCouString);
+					}
+				}else{
+					posCouString = i-1 + "," + count;
+					posCount.add(posCouString);
+					gdataFlag = rowStrings[gcolNum];
+					count = 1;
+					if(i == result.size()-1){
+						posCouString = i + "," + count;
+						posCount.add(posCouString);
+					}
+					
+				}
+	
+			}
+
+		}
+		return posCount;
+	}
+	
+	//without updating schema
+	public static ArrayList<String> count(ArrayList<StringBuilder> result, int acolNum, int gcolNum){
+		int count = 0;
+		String gdataFlag = "";
+		String dataFlag = "";
+		String[] rowStrings;
+		//String is consisted like (the last position,count)
+		String posCouString;
+		ArrayList<String> posCount = new ArrayList<>();
+		
+		if(gcolNum == acolNum){//the column which is grouby and count is the same column
+			for (int i = 0; i < result.size(); i++) {
+				rowStrings = result.get(i).toString().split("\\|");
+				
+				//assign dataFlag
+				//update schema
+				if(i==0){
+					dataFlag = rowStrings[acolNum];
+				}
+				if(dataFlag.equals(rowStrings[acolNum])){
+					count++;
+					if(i == result.size()-1){
+						posCouString = i + "," + count;
+						posCount.add(posCouString);
+					}
+				}else{
+					posCouString = i-1 + "," + count;
+					posCount.add(posCouString);
+					dataFlag = rowStrings[acolNum];
+					count = 1;
+					if(i == result.size()-1){
+						posCouString = i + "," + count;
+						posCount.add(posCouString);
+					}
+				}
+				
+			}
+			
+		}else{//the column which is grouby and count is not the same column
+			
+			for (int i = 0; i < result.size(); i++) {
+				rowStrings = result.get(i).toString().split("\\|");
+				dataFlag = rowStrings[acolNum];
+				
+				if(i == 0){
+					gdataFlag = rowStrings[gcolNum];
+				}
+				
+				if(gdataFlag.equals(rowStrings[gcolNum])){
+					if(!dataFlag.equalsIgnoreCase("null")){
+						count++;
+					}
+					if(i == result.size()-1){
+						posCouString = i + "," + count;
+						posCount.add(posCouString);
+					}
+				}else{
+					posCouString = i-1 + "," + count;
+					posCount.add(posCouString);
+					gdataFlag = rowStrings[gcolNum];
+					count = 1;
+					if(i == result.size()-1){
+						posCouString = i + "," + count;
+						posCount.add(posCouString);
+					}
+					
+				}
+	
+			}
+
+		}
+		return posCount;
+	}
+	
+	//with updating schema
+	public static ArrayList<String> sum(HashMap<String, HashMap<String, String>> schema,
+			String operator, ArrayList<StringBuilder> result, int acolNum, int gcolNum){
+		String[] rowStrings;
+		String posSumString;
+		String dataFlag = "";
+		ArrayList<String> posSum = new ArrayList<>();
+		String gdataFlag = "";
+		double sum = 0.0;
+		//double
+		for (int i = 0; i < result.size(); i++) {
+			rowStrings = result.get(i).toString().split("\\|");
+			dataFlag = rowStrings[acolNum];
+			if(i ==0){
+				gdataFlag = rowStrings[gcolNum];
+				updateSchema(schema,operator,rowStrings);
+			}
+			if(gdataFlag.equals(rowStrings[gcolNum])){
+				if(!dataFlag.equalsIgnoreCase("null")){
+					sum+= Double.valueOf(dataFlag);	
+				}
+				if(i == result.size()-1){
+					posSumString = i + "," + sum;
+				}
+			}else{
+				posSumString = i-1+","+sum;
+				posSum.add(posSumString);
+				sum = Double.valueOf(dataFlag);
+				gdataFlag = rowStrings[gcolNum];
+				if(i == result.size()-1){
+					if(!dataFlag.equalsIgnoreCase("null")){
+						
+						posSumString = i + "," + sum;
+						posSum.add(posSumString);
+					}
+					
+				}
+			}
+		}
+		return posSum;
+	}
+	
+	//without updating schema
+	public static ArrayList<String> sum(ArrayList<StringBuilder> result, int acolNum, int gcolNum){
+		String[] rowStrings;
+		String posSumString;
+		String dataFlag = "";
+		ArrayList<String> posSum = new ArrayList<>();
+		String gdataFlag = "";
+		double sum = 0.0;
+		//double
+		for (int i = 0; i < result.size(); i++) {
+			rowStrings = result.get(i).toString().split("\\|");
+			dataFlag = rowStrings[acolNum];
+			if(i ==0){
+				gdataFlag = rowStrings[gcolNum];
+			}
+			if(gdataFlag.equals(rowStrings[gcolNum])){
+				if(!dataFlag.equalsIgnoreCase("null")){
+					sum+= Double.valueOf(dataFlag);	
+				}
+				if(i == result.size()-1){
+					posSumString = i + "," + sum;
+				}
+			}else{
+				posSumString = i-1+","+sum;
+				posSum.add(posSumString);
+				sum = Double.valueOf(dataFlag);
+				gdataFlag = rowStrings[gcolNum];
+				if(i == result.size()-1){
+					if(!dataFlag.equalsIgnoreCase("null")){
+						
+						posSumString = i + "," + sum;
+						posSum.add(posSumString);
+					}
+					
+				}
+			}
+		}
+		return posSum;
 	}
 
 }
