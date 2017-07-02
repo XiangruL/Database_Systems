@@ -140,44 +140,6 @@ public class aggV2 {
 			break;
 	
 		case "min":
-			
-			
-			
-			String [] firstRec = result.get(0).toString().split("\\|");
-			String record =firstRec[acolNum] ;
-			String answer = firstRec[acolNum] + "|" + "0";
-			for (int i = 1 ; i<result.size();i++){
-				String[] incomingRow = result.get(i).toString().split("\\|");
-				
-				if (tool.isLarge(aclotype, incomingRow[acolNum], record)){
-
-					
-				}
-				else if (incomingRow[acolNum].equals(record)){
-					answer = answer + "|" + i; 
-				}
-				
-				else{
-					
-					record = incomingRow[acolNum];
-					
-					answer = incomingRow[acolNum]+"|" +i ;
-				}
-			}
-			System.out.println(record);
-			System.out.println(answer);
-			String[] addBack = answer.split("\\|");
-			for (int i =1 ; i<addBack.length;i++){
-				
-				System.out.println(addBack[i]);
-				StringBuilder mysb = new StringBuilder();
-				mysb.append("|"  +record);
-				result.get(Integer.valueOf(addBack[i])).append(mysb);
-			}
-
-			break;
-	
-		case "max":
 			acolNum= 2;
 			aclotype = "varchar";
 			int oriLen = result.get(0).toString().split("\\|").length;
@@ -188,7 +150,7 @@ public class aggV2 {
 			for (int i = 1 ; i<result.size();i++){
 				String[] incomingRow = result.get(i).toString().split("\\|");
 				
-				if (tool.isLarge(aclotype, incomingRow[acolNum], record1)==false){
+				if (tool.isLarge(aclotype, incomingRow[acolNum], record1)){
 
 					
 				}
@@ -223,7 +185,58 @@ public class aggV2 {
 				String [] temp = result.get(i).toString().split("\\|");
 				if (temp.length==oriLen){
 					result.get(i).append(mynull);
-					System.out.println("has" +i);
+//					System.out.println("has" +i);
+				}
+			}
+			break;
+	
+		case "max":
+			acolNum= 2;
+			aclotype = "varchar";
+			int oriLen1 = result.get(0).toString().split("\\|").length;
+//			String [] temp = result.get(i).toString().split("\\|");
+			String [] firstRec11 = result.get(0).toString().split("\\|");
+			String record11 =firstRec11[acolNum] ;
+			String answer11 = firstRec11[acolNum] + "|" + "0";
+			for (int i = 1 ; i<result.size();i++){
+				String[] incomingRow = result.get(i).toString().split("\\|");
+				
+				if (tool.isLarge(aclotype, incomingRow[acolNum], record11)==false){
+
+					
+				}
+				else if (incomingRow[acolNum].equals(record11)){
+					answer11 = answer11 + "|" + i; 
+				}
+				
+				else{
+					
+					record11 = incomingRow[acolNum];
+					
+					answer11 = incomingRow[acolNum]+"|" +i ;
+				}
+			}
+			System.out.println(record11);
+			System.out.println(answer11);
+			StringBuilder mysb1 = new StringBuilder();
+			mysb1.append("|"  +record11);
+			StringBuilder mynull1 = new StringBuilder();
+			mynull1.append("|"  +"null");
+			String[] addBack11 = answer11.split("\\|");
+			for (int i =1 ; i<addBack11.length;i++){
+				
+				System.out.println(addBack11[i]);
+				
+				
+				result.get(Integer.valueOf(addBack11[i])).append(mysb1);
+				//System.out.println(i);
+			}
+
+			for ( int i =0 ; i< result.size();i++){
+				String [] temp = result.get(i).toString().split("\\|");
+				if (temp.length==oriLen1){
+					result.get(i).append(mynull1);
+//					System.out.println("has" +i);
 				}
 			}
 			break;
