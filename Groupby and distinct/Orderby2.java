@@ -53,16 +53,9 @@ public class Orderby2 {
 				}	
 			}
 
-				int myColPos= tool.getColNum(scheme, myTableName, myColName); //int
-				String myColType= tool.getColType(scheme, myTableName, myColName); //String //these are tools methond,NEED!!!
-				mySortingOrder = tool.getColType(scheme, myTableName, myColName);
-/*	 Testing value			
- 				myColPos= 0; 
-				String myColType= "integer";
-				mySortingOrder = "desc";
-*/			
-				
-				
+				int myColPos= tool.getColNum(scheme, myTableName, myColName); 
+				String myColType= tool.getColType(scheme, myTableName, myColName); 
+
 				//Above ---Extract the TableName,ColName,ColType from tool class for later use.
 				
 				
