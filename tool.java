@@ -57,8 +57,10 @@ public class tool {
 	
 	
 	
-	
 	public static boolean isLarge(String type, String operand1, String operand2){
+		//1 is greater than 2 return t
+		//otherwise f
+		
 		
 		//classify based on data type
 		switch (type) {
@@ -80,20 +82,35 @@ public class tool {
 			break;
 			
 		case "varchar":
-			
-			
-			
+			//if op1 > op2 then true else false.
+			if (operand1.compareTo(operand2)>0){
+				return true;
+			}
 			
 			break;
-		
+			
+			
+			
 		case "integer":
 			int num1 = Integer.valueOf(operand1);
 			int num2 = Integer.valueOf(operand2);
+
 			if(num1 > num2){
+				return true;
+				
+			}
+		
+			break;
+			
+		case "double":
+			Double num11 = Double.valueOf(operand1);
+			Double num22 = Double.valueOf(operand2);
+			if(num11 > num22){
 				return true;
 			}
 		
 			break;
+			
 
 		default:
 			break;

@@ -211,7 +211,7 @@ public class evel {
     		int wtf2 = 0;
  
     		while((temp3= br1.readLine())!=null){
-    			temp3  = temp3.replaceAll("﻿", "");
+    			temp3  = temp3.replaceAll("ï»¿", "");
 //    			mysb.append(temp3);
 //    			sb.add(mysb);
 
@@ -283,6 +283,59 @@ public class evel {
     		//P.ASC ASC
     		
     		
+    		
+    		//TESTING SCH
+    		HashMap<String, HashMap<String, String>> schema = new HashMap<>();
+    		HashMap<String, String> tableMap1 = new HashMap<>();
+    		HashMap<String, String> tableMap2 = new HashMap<>();
+    		HashMap<String, String> tableMap3 = new HashMap<>();
+    		HashMap<String, String> tableMap4 = new HashMap<>();
+    		HashMap<String, String> tableMap5 = new HashMap<>();
+    		HashMap<String, String> tableMap6 = new HashMap<>();
+    		HashMap<String, String> tableMap7 = new HashMap<>();
+    		
+    		
+    		tableMap1.put("publicationid", "0,integer");
+    		tableMap1.put("pubtypeid", "1,integer");
+    		tableMap1.put("title", "2,varchar(200)");
+    		tableMap1.put("venueid", "3,integer");
+    		tableMap1.put("pubdate", "4,date");
+    		
+    		tableMap2.put("pubtypeid", "0,integer");
+    		tableMap2.put("ptype", "1,varchar(50)");
+    		
+    		tableMap3.put("venuetypeid", "0,integer");
+    		tableMap3.put("vtype", "1,varchar(50)");
+    		
+    		tableMap4.put("venueid", "0,integer");
+    		tableMap4.put("venuetypeid", "1,integer");
+    		tableMap4.put("vname", "2,varchar(50)");
+    		tableMap4.put("eventyear", "3,varchar(4)");
+    		
+    		tableMap5.put("authorid", "0,integer");
+    		tableMap5.put("firstname", "1,varchar(50)");
+    		tableMap5.put("lastname", "2,varchar(50)");
+    		tableMap5.put("instituteid", "3,integer");
+    		
+    		tableMap6.put("authorid", "0,integer");
+    		tableMap6.put("publicationid", "1,integer");
+    		
+    		tableMap7.put("instituteid", "0,integer");
+    		tableMap7.put("iname", "1,varchar(200)");
+    		tableMap7.put("yearfounded", "2,varchar(4)");
+    		
+    		schema.put("publication", tableMap1);
+    		schema.put("publicationtype", tableMap2);
+    		schema.put("venuetype", tableMap3);
+    		schema.put("venue", tableMap4);
+    		schema.put("author", tableMap5);
+    		schema.put("authorship", tableMap6);
+    		schema.put("institute", tableMap7);
+    		
+    		
+    		//
+    		
+    		
     		ArrayList<StringBuilder> myInput = new ArrayList<StringBuilder>()  ;
     		ArrayList<StringBuilder> testing = new ArrayList<StringBuilder>()  ;
     		ArrayList<StringBuilder> testing2 = new ArrayList<StringBuilder>()  ;
@@ -317,6 +370,13 @@ public class evel {
     		String query9="score";
     		String query10="DESC";
     		String query11="ASC";
+    	String query12 = "count(author.instituteid)"; 
+    	String query13 = "count(instituteid)";
+    	String query14 = "P.title";
+    	String query15 = "title";
+    	String agg1 =  "max(author.instituteid)" ;
+    	String agg2 =  "max(author.instituteid)" ;
+    	String query16 = "author.instituteid desc";
     		
 
     		
@@ -332,17 +392,17 @@ public class evel {
     		StringBuilder singleRecord9 = new StringBuilder() ;
     		StringBuilder singleRecord10 = new StringBuilder() ;
     		
-    		singleRecord.append ("0|0|Aeta Probabilistic Databases: A Scalable Approach to Belief Updating and Parameter Learning|0|2017-04-01");
-    		singleRecord1.append("1|2|Bummarizing Large Query Logs in Ettu|10|2016-06-01");
-    		singleRecord2.append("2|6|Che Exception That Improves The Rule|12|2016-03-01");
-    		singleRecord3.append("3|6|Provenance-aware Versioned Dataworkspaces|13|2016-08-18");
-    		singleRecord4.append("4|9|Small Data|4|2017-01-05");
-    		singleRecord5.append("5|8|Stops the Truthiness and Just Be Wrong|6|2017-03-10");
-    		singleRecord6.append("5|1|Stopa the Truthiness and Just Be Wrong|6|2017-03-10");
-    		singleRecord7.append("5|2|Stopa the Truthiness and Just Be Wrong|6|2017-03-10");
-    		singleRecord8.append("5|-3|Stopss the Truthiness and Just Be Wrong|6|2017-03-10");
-    		singleRecord9.append("5|-2|Stops the Truthiness and Just Be Wrong|6|2017-03-10");
-    		singleRecord10.append("5|-3|Stopssa the Truthiness and Just Be Wrong|6|2017-03-10");
+    		singleRecord.append ("0|-0.3|Aeta Probabilistic Databases: A Scalable Approach to Belief Updating and Parameter Learning|0|2017-04-01");
+    		singleRecord1.append("1|0.2|Bummarizing Large Query Logs in Ettu|10|2016-06-01");
+    		singleRecord2.append("-2|-0.3|Che Exception That Improves The Rule|12|2016-03-01");
+    		singleRecord3.append("-1|1.6|Provenance-aware Versioned Dataworkspaces|13|2016-08-18");
+    		singleRecord4.append("0|1.9|Small Data|4|2017-01-05");
+    		singleRecord5.append("5|1.8|Stops the Truthiness and Just Be Wrong|6|2017-03-10");
+    		singleRecord6.append("5|1.1|Stopa the Truthiness and Just Be Wrong|6|2017-03-10");
+    		singleRecord7.append("5|1.2|Stopa the Truthiness and Just Be Wrong|6|2017-03-10");
+    		singleRecord8.append("5|-3.1|Stopss the Truthiness and Just Be Wrong|6|2017-03-10");
+    		singleRecord9.append("5|-2.3|Stops the Truthiness and Just Be Wrong|6|2017-03-10");
+    		singleRecord10.append("5|-3.2|Stopssa the Truthiness and Just Be Wrong|6|2017-03-10");
 //    		testing.add(singleRecord);
 //    		testing.add(singleRecord1);
 //    		testing.add(singleRecord2);
@@ -362,40 +422,45 @@ public class evel {
 //      Orderby2.orderBy2(myInput, allTable, query10, singleRecord);
 //      Orderby2.orderBy2(myInput, allTable, query11, singleRecord);
       //  testing = Orderby2.orderBy2(testing, allTable, query11, singleRecord);
-        testing= Orderby2.orderBy2(myInput, allTable, query, singleRecord2);//C
-        testing2 = Orderby2.orderBy2(testing, allTable, query, singleRecord);//A
-        testing3 = Orderby2.orderBy2(testing2, allTable, query, singleRecord1);//B
-        testing4 = Orderby2.orderBy2(testing3, allTable, query, singleRecord5);//s
-        testing5 = Orderby2.orderBy2(testing4, allTable, query, singleRecord3);
-        testing6 = Orderby2.orderBy2(testing5, allTable, query, singleRecord4);
-        testing7 = Orderby2.orderBy2(testing6, allTable, query, singleRecord6);
-        testing8 = Orderby2.orderBy2(testing7, allTable, query, singleRecord7);
-        testing9 = Orderby2.orderBy2(testing8, allTable, query, singleRecord8);
-        testing10 = Orderby2.orderBy2(testing9, allTable, query, singleRecord9);
-        testing11 = Orderby2.orderBy2(testing10, allTable, query, singleRecord10);
+        testing= Orderby2.orderBy2(myInput, schema, query16, singleRecord);//C
+        testing2 = Orderby2.orderBy2(testing,schema, query16, singleRecord1);//A
+        testing3 = Orderby2.orderBy2(testing2, schema, query16, singleRecord2);//B
         
-//        System.out.println(testing3);
-        for (StringBuilder i :testing5) {
-//        System.out.println(i);//This should return the whole table with sorted attributes ASC or DESC.
-        }
-     testing= Orderby2.orderBy2( Orderby2.orderBy2(Orderby2.orderBy2(myInput, allTable, query, singleRecord), allTable, query1, singleRecord1), allTable, query2, singleRecord2);
-     
-//     for (StringBuilder i: testing){
-//    	 //System.out.println(i);
-//     }
-        
+        testing4 = Orderby2.orderBy2(testing3, schema, query16, singleRecord5);//s
+        testing5 = Orderby2.orderBy2(testing4, schema, query16, singleRecord3);
+        testing6 = Orderby2.orderBy2(testing5, schema, query16, singleRecord4);
+        testing7 = Orderby2.orderBy2(testing6, schema, query16, singleRecord6);
+        testing8 = Orderby2.orderBy2(testing7, schema, query16, singleRecord7);
+        testing9 = Orderby2.orderBy2(testing8, schema, query16, singleRecord8);
+        testing10 = Orderby2.orderBy2(testing9, schema, query16, singleRecord9);
+        testing11 = Orderby2.orderBy2(testing10,schema, query16, singleRecord10);
 //        
-//        ArrayList<StringBuilder> aggTable = new ArrayList<StringBuilder>()  ;
-//String query12 = "count(author.instituteid)"; 
-//String query13 = "count(instituteid)";
-String query14 = "P.title";
-String query15 = "title";
-      
-//      aggregation a = new aggregation();
-     // a.aggRow(allTable,  aggTable, query12);
-//      System.out.println(testing5);
-      distinct d = new distinct();
-      d.dist(allTable, testing11, query15);
+////        System.out.println(testing3);
+        for (StringBuilder i :testing11) {
+        	System.out.println(i);//This should return the whole table with sorted attributes ASC or DESC.
+        }
+//   //  testing= Orderby2.orderBy2( Orderby2.orderBy2(Orderby2.orderBy2(myInput, allTable, query, singleRecord), allTable, query1, singleRecord1), allTable, query2, singleRecord2);
+//     
+////     for (StringBuilder i: testing){
+////    	 //System.out.println(i);
+////     }
+//        
+////        
+////        ArrayList<StringBuilder> aggTable = new ArrayList<StringBuilder>()  ;
+//////String query12 = "count(author.instituteid)"; 
+//////String query13 = "count(instituteid)";
+////String query14 = "P.title";
+////String query15 = "title";
+//String agg1 =  "max(author.instituteid)" ;
+//String agg2 =  "max(author.instituteid)" ;
+////
+////      
+      aggregation a = new aggregation();
+     // System.out.println(schema);
+      aggregation.aggRow(schema,testing11,agg1);
+      //System.out.println(schema);
+//      distinct d = new distinct();
+//      d.dist(allTable, testing11, query15);
       
       
 
