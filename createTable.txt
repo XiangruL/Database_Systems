@@ -1,0 +1,46 @@
+HashMap<String, HashMap<String, String>> schema = new HashMap<>();
+		HashMap<String, String> tableMap1 = new HashMap<>();
+		HashMap<String, String> tableMap2 = new HashMap<>();
+		HashMap<String, String> tableMap3 = new HashMap<>();
+		HashMap<String, String> tableMap4 = new HashMap<>();
+		HashMap<String, String> tableMap5 = new HashMap<>();
+		HashMap<String, String> tableMap6 = new HashMap<>();
+		HashMap<String, String> tableMap7 = new HashMap<>();
+		
+		
+		tableMap1.put("publicationid", "0,integer");
+		tableMap1.put("pubtypeid", "1,integer");
+		tableMap1.put("title", "2,varchar(200)");
+		tableMap1.put("venueid", "3,integer");
+		tableMap1.put("pubdate", "4,date");
+		
+		tableMap2.put("pubtypeid", "0,integer");
+		tableMap2.put("ptype", "1,varchar(50)");
+		
+		tableMap3.put("venuetypeid", "0,integer");
+		tableMap3.put("vtype", "1,varchar(50)");
+		
+		tableMap4.put("venueid", "0,integer");
+		tableMap4.put("venuetypeid", "1,integer");
+		tableMap4.put("vname", "2,varchar(50)");
+		tableMap4.put("eventyear", "3,varchar(4)");
+		
+		tableMap5.put("authorid", "0,integer");
+		tableMap5.put("firstname", "1,varchar(50)");
+		tableMap5.put("lastname", "2,varchar(50)");
+		tableMap5.put("instituteid", "3,integer");
+		
+		tableMap6.put("authorid", "0,integer");
+		tableMap6.put("publicationid", "1,integer");
+		
+		tableMap7.put("instituteid", "0,integer");
+		tableMap7.put("iname", "1,varchar(200)");
+		tableMap7.put("yearfounded", "2,varchar(4)");
+		
+		schema.put("publication", tableMap1);
+		schema.put("publicationtype", tableMap2);
+		schema.put("venuetype", tableMap3);
+		schema.put("venue", tableMap4);
+		schema.put("author", tableMap5);
+		schema.put("authorship", tableMap6);
+		schema.put("institute", tableMap7);
