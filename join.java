@@ -8,7 +8,8 @@ public class join {
 	static HashMap<String, HashMap<String, String>> newSchema = null;
 	static int index = 0;
 	
-	public static StringBuilder joinRow(HashMap<String, HashMap<String, String>> schema,HashMap<String, HashMap<String, String>> oldschema,
+	public static StringBuilder joinRow(HashMap<String, HashMap<String, String>> schema,
+			HashMap<String, HashMap<String, String>> oldSchema,
 			StringBuilder row1, StringBuilder row2, String query, boolean flag, boolean updatFlag){
 		
 		StringBuilder row = new StringBuilder();
@@ -30,8 +31,7 @@ public class join {
 			String colName2 = tcName2[1];
 			
 			int colNum1 = tool.getColNum(schema, tableName1, colName1);
-			int colNum2 = tool.getColNum(oldschema, tableName2, colName2);
-
+			int colNum2 = tool.getColNum(oldSchema, tableName2, colName2);
 					
 			if(rowString1[colNum1].equals(rowString2[colNum2])){
 			
@@ -54,9 +54,9 @@ public class join {
 			if(updatFlag){
 				if(flag){
 					//create schema
-					createSchema(schema, tableName1, tableName2, colName1, colName2);
+					createSchema(oldSchema, tableName1, tableName2, colName1, colName2);
 				}else{
-					createSchema1(schema, tableName1, tableName2, colName1, colName2);
+					createSchema1(schema,oldSchema, tableName1, tableName2, colName1, colName2);
 				}
 			}
 			
@@ -68,20 +68,28 @@ public class join {
 	
 	//update one table schema
 	public static void createSchema1(HashMap<String, HashMap<String, String>> schema,
+			HashMap<String, HashMap<String, String>> oldSchema,
 			String tableName1,String tableName2, String colName1, String colName2){
-		 
-		newSchema = new HashMap<>(newSchema);
-
+	
+		newSchema = new HashMap<>(schema);
+		
 		HashMap<String, String> colHashMap1 = new HashMap<>();
 		HashMap<String, String> colHashMap2 = new HashMap<>();
 		
 		//assign index for the second table column
 		String temp = "";
 		String[] str;
-		
-		Iterator it = schema.get(tableName2).entrySet().iterator();
-		String colName;
+		Iterator it = oldSchema.get(tableName2).entrySet().iterator();
+		String colName = null;
 		int colNum;
+		
+		//find the total number of columns of first table
+		int countZ = index;
+		int count = countZ;
+		int joinColNum = tool.getColNum(oldSchema, tableName2, colName2);
+		if(joinColNum != 0){
+			countZ++;
+		}
 				
 	    while (it.hasNext()) {
 	        Map.Entry pair = (Map.Entry)it.next();
@@ -96,7 +104,7 @@ public class join {
 	        }
 	        
 	        colName = (String)pair.getKey();
-	        colNum = tool.getColNum(schema, tableName2, colName);
+	        colNum = tool.getColNum(oldSchema, tableName2, colName);
 	        if(colNum ==0){
 	        	colNum +=countZ;
 	        }else{
@@ -108,22 +116,12 @@ public class join {
 	        temp = str[0]+","+str[1]; 
 	        colHashMap2.put(colName, temp); 
 	        index++;
-	        
-	        index++;
-	        colNum = tool.getColNum(schema, tableName2, colName)+index;
-	        colName = (String)pair.getKey();
-	        temp = (String) pair.getValue();
-	        str = temp.split(",");
-	        str[0] = String.valueOf(index);
-	        temp = str[0]+","+str[1]; 
-	        
-	        colHashMap2.put(colName, temp); 
 	    }
 	    newSchema.put(tableName2, colHashMap2);
 	}
 	
 	//update two table schema
-	public static void createSchema(HashMap<String, HashMap<String, String>> schema,
+	public static void createSchema(HashMap<String, HashMap<String, String>> oldSchema,
 			String tableName1, String tableName2, String colName1, String colName2){
 		
 		newSchema = new HashMap<>(createTable.allTable);
@@ -132,9 +130,10 @@ public class join {
 		HashMap<String, String> colHashMap2 = new HashMap<>();
 		
 		//find the total number of columns of first table
-		int countZ = schema.get(tableName1).size()-1;
+		int countZ = oldSchema.get(tableName1).size()-1;
+		index = countZ;
 		int count = countZ;
-		int joinColNum = tool.getColNum(schema, tableName2, colName2);
+		int joinColNum = tool.getColNum(oldSchema, tableName2, colName2);
 		if(joinColNum != 0){
 			countZ++;
 		}
@@ -142,7 +141,7 @@ public class join {
 		String temp = "";
 		String[] str;
 		
-		Iterator it = schema.get(tableName1).entrySet().iterator();
+		Iterator it = oldSchema.get(tableName1).entrySet().iterator();
 		while (it.hasNext()) {
 		       Map.Entry pair = (Map.Entry)it.next();
 		       colHashMap1.put((String)pair.getKey(), (String)pair.getValue());
@@ -150,13 +149,13 @@ public class join {
 		}
 		newSchema.put(tableName1, colHashMap1);
 		
-		it = schema.get(tableName2).entrySet().iterator();
+		it = oldSchema.get(tableName2).entrySet().iterator();
 		String colName;
 		int colNum;
 	    while (it.hasNext()) {
 	        Map.Entry pair = (Map.Entry)it.next();
 	        if(colName2.equals((String)pair.getKey())){
-	        	colNum = tool.getColNum(schema, tableName1, colName1);
+	        	colNum = tool.getColNum(oldSchema, tableName1, colName1);
 	        	temp = (String) pair.getValue();
 		        str = temp.split(",");
 		        str[0] = String.valueOf(colNum);
@@ -166,7 +165,7 @@ public class join {
 	        }
 	        
 	        colName = (String)pair.getKey();
-	        colNum = tool.getColNum(schema, tableName2, colName);
+	        colNum = tool.getColNum(oldSchema, tableName2, colName);
 	        if(colNum ==0){
 	        	colNum +=countZ;
 	        }else{
