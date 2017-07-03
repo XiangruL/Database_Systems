@@ -4,11 +4,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 public class projection {
+	
 	public static ArrayList<StringBuilder> proTable(ArrayList<StringBuilder> result,
 			HashMap<String, HashMap<String, String>> schema, 
-			StringBuilder row,String query,int index){
+			StringBuilder row,String query){
 		
 		if(row.length()>0){
+			
 			//Parse the query, then get table name and column name
 			String[] qstr = query.split(", ");
 			
@@ -42,15 +44,52 @@ public class projection {
 				sb.append(rowString[colNum]+",");
 			}
 			
-			if(index != -1){
-				result.add(index, sb);
-			}else{
-				result.add(sb);
-			}
+			result.add(sb);
 		}
-		
-		
 		return result;
 	}
-
+	
+	public static ArrayList<StringBuilder> proTable(ArrayList<StringBuilder> result,
+			HashMap<String, HashMap<String, String>> schema, String query){
+		
+		StringBuilder sb = new StringBuilder();
+		String[] qstr = query.split(", ");
+		String tableName;
+		String colName;
+		int colNum;
+		String[] rowStrings;
+		for (int i = 0; i < result.size(); i++) {
+			rowStrings = result.get(i).toString().split("\\|");
+			
+			for (int j = 0; j < qstr.length; j++) {
+				if(qstr[j].contains(".")){
+					String[] tcName = qstr[j].split("\\.");
+					tableName = tcName[0];
+					colName = tcName[1];
+				}else{
+					ArrayList<String> tName = parseSelect.getFromTable();
+					if(tName.size()!=1){
+						System.err.println("do not specify table name");
+						return result;
+					}
+					tableName = tName.get(0);
+					colName = qstr[j];
+				}
+				
+				
+				colNum = tool.getColNum(schema, tableName, colName);
+				
+				if(j == qstr.length-1){
+					sb.append(rowStrings[colNum]);
+					break;
+				}
+				sb.append(rowStrings[colNum]+",");
+				
+			}	
+			result.remove(i);
+			result.add(i,sb);	
+			sb = new StringBuilder();
+		}
+		return result;
+	}
 }
