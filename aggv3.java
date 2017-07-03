@@ -28,7 +28,7 @@ public class aggV2 {
 			
 			ArrayList<String> tName = parseSelect.getFromTable();
 			if(tName.size()!=1){
-				//System.err.println("do not specify table name");
+				////System.err.println("do not specify table name");
 				return result;
 			}
 			gtableName = tName.get(0);
@@ -81,48 +81,59 @@ public class aggV2 {
 			
 			int oriLen = result.get(0).toString().split("\\|").length;
 			for (StringBuilder a: result){
-				System.out.println(a);
+				//System.out.println(a);
 				
 			}
 			
 			
 //			for (StringBuilder s : result){
-//				//System.out.println(s);
+//				////System.out.println(s);
 //			}
 			String [] firstRec1 = result.get(0).toString().split("\\|");
 			String record1 =firstRec1[gcolNum] ;
 			String aclotype=tool.getColType(schema, atableName, acolName);
-			//System.out.println("first " +record1);
-			//System.out.println("acloType " +aclotype);
+			////System.out.println("first " +record1);
+			////System.out.println("acloType " +aclotype);
 			String record11 = firstRec1[acolNum] ;
 			String answer11 = firstRec1[acolNum] + "|" + "0";
-			//System.out.println("record11 " +record11);
-			//System.out.println("answer11 " +answer11);
+			////System.out.println("record11 " +record11);
+			////System.out.println("answer11 " +answer11);
 			ArrayList<String> posCount=  new ArrayList<String>();
 //			aclotype = "date";
 //			gcolNum=0;
 //			acolNum=4;
-			//System.out.println("gnum " +gcolNum);
-			//System.out.println("anum " +acolNum);
+			////System.out.println("gnum " +gcolNum);
+			////System.out.println("anum " +acolNum);
+			String[] rowStrings;
+
 			for (int i = 0 ; i<result.size();i++){
+				rowStrings = result.get(0).toString().split("\\|");
+
+				if(i==0){
+					updateSchema(schema,operator,rowStrings);
+					
+				}
+				
+				
+				
 				if (result.get(i).toString().split("\\|")[0].equals(record1)){
-//					//System.out.println(result.get(i).toString().split("\\|")[0]);
+//					////System.out.println(result.get(i).toString().split("\\|")[0]);
 					
 					String[] incomingRow = result.get(i).toString().split("\\|");
 //					if (tool.isLarge(aclotype, incomingRow[acolNum], record11)==false){
 					
 					if (incomingRow[acolNum].equals(record11)){
-//						//System.out.println(incomingRow[acolNum]+ "is not greater than "+ record11);
+//						////System.out.println(incomingRow[acolNum]+ "is not greater than "+ record11);
 						answer11 = answer11 + "|" + i; 
-						//System.out.println(incomingRow[acolNum]+ "is equal to (Appened things)"+ record11);
+						////System.out.println(incomingRow[acolNum]+ "is equal to (Appened things)"+ record11);
 						
 					}
 					else if (tool.isLarge(aclotype, incomingRow[acolNum], record11)){
-						//System.out.println(incomingRow[acolNum]+ "is not greater than (Do nothing) "+ record11);
+						////System.out.println(incomingRow[acolNum]+ "is not greater than (Do nothing) "+ record11);
 					}
 					
 					else{
-						//System.out.println(incomingRow[acolNum]+ "is  greater than (Update MaxVal)"+ record11);
+						////System.out.println(incomingRow[acolNum]+ "is  greater than (Update MaxVal)"+ record11);
 						record11 = incomingRow[acolNum];
 						
 						answer11 = incomingRow[acolNum]+"|" +i ;
@@ -131,9 +142,9 @@ public class aggV2 {
 				}
 				
 				else{
-					//System.out.println("the max is " +answer11);
+					////System.out.println("the max is " +answer11);
 					int currentpos = i-1;
-					//System.out.println("current pos is " + currentpos);
+					////System.out.println("current pos is " + currentpos);
 					if (currentpos!= -1){
 					
 					posCount.add( answer11);
@@ -159,7 +170,7 @@ public class aggV2 {
 							
 							StringBuilder mysb = new StringBuilder();
 							mysb.append("|" +addb[0]); 
-							System.out.println("---"+addb[j]+"  "+result.get(Integer.valueOf(addb[j])));
+							//System.out.println("---"+addb[j]+"  "+result.get(Integer.valueOf(addb[j])));
 							result.get(Integer.valueOf(addb[j])).append(mysb);
 						}
 
@@ -184,39 +195,52 @@ public class aggV2 {
 		case "max":
 			int oriLen2 = result.get(0).toString().split("\\|").length;
 			for (StringBuilder a: result){
-				System.out.println(a);
+				//System.out.println(a);
 				
 			}
 			
 			String [] firstRec1max = result.get(0).toString().split("\\|");
 			String record1max =firstRec1max[gcolNum] ;
 			String aclotypemax=tool.getColType(schema, atableName, acolName);
-			//System.out.println("first " +record1max);
-			//System.out.println("acloType " +aclotypemax);
+			////System.out.println("first " +record1max);
+			////System.out.println("acloType " +aclotypemax);
 			String record111 = firstRec1max[acolNum] ;
 			String answer111 = firstRec1max[acolNum] + "|" + "0";
-			//System.out.println("record11 " +record111);
-			//System.out.println("answer11 " +answer111);
+			////System.out.println("record11 " +record111);
+			////System.out.println("answer11 " +answer111);
 			ArrayList<String> posCount1=  new ArrayList<String>();
 //			aclotypemax = "date";
 //			gcolNum=0;
 //			acolNum=4;
-			//System.out.println("gnum " +gcolNum);
-			//System.out.println("anum " +acolNum);
+			////System.out.println("gnum " +gcolNum);
+			////System.out.println("anum " +acolNum);
+			String[] rowStrings2;
 			for (int i = 0 ; i<result.size();i++){
+				
+				
+
+		
+					rowStrings2 = result.get(0).toString().split("\\|");
+
+					if(i==0){
+						updateSchema(schema,operator,rowStrings2);
+						
+					}
+				
+				
 				if (result.get(i).toString().split("\\|")[0].equals(record1max)){
 					String[] incomingRow = result.get(i).toString().split("\\|");
 					if (incomingRow[acolNum].equals(record111)){
-//						//System.out.println(incomingRow[acolNum]+ "is not greater than "+ record11);
+//						////System.out.println(incomingRow[acolNum]+ "is not greater than "+ record11);
 						answer111 = answer111 + "|" + i; 
-						//System.out.println(incomingRow[acolNum]+ "is equal to (Appened things)"+ record111);
+						////System.out.println(incomingRow[acolNum]+ "is equal to (Appened things)"+ record111);
 					}
 					else if (tool.isLarge(aclotypemax, incomingRow[acolNum], record111)==false){
-						//System.out.println(incomingRow[acolNum]+ "is not greater than (Do nothing) "+ record111);
+						////System.out.println(incomingRow[acolNum]+ "is not greater than (Do nothing) "+ record111);
 					}
 					
 					else{
-						//System.out.println(incomingRow[acolNum]+ "is  greater than (Update MaxVal)"+ record111);
+						////System.out.println(incomingRow[acolNum]+ "is  greater than (Update MaxVal)"+ record111);
 						record111 = incomingRow[acolNum];
 						
 						answer111 = incomingRow[acolNum]+"|" +i ;
@@ -224,20 +248,20 @@ public class aggV2 {
 
 				}
 				else{
-					//System.out.println("the max is " +answer111);
+					////System.out.println("the max is " +answer111);
 					int currentpos = i-1;
-					//System.out.println("current pos is " + currentpos);
+					////System.out.println("current pos is " + currentpos);
 					if (currentpos!= -1){
 						
 						posCount1.add(answer111);
 						
 						}
-					//System.out.println("break here and clear the maxmimum record " + result.get(i).toString().split("\\|")[0]);
+					////System.out.println("break here and clear the maxmimum record " + result.get(i).toString().split("\\|")[0]);
 					//clear it
 					record111 = result.get(i).toString().split("\\|")[acolNum];
 					answer111 = result.get(i).toString().split("\\|")[acolNum]+ "|" + i;
-					//System.out.println("after clear record is  " + record111);
-					//System.out.println("after clear answer is  " + answer111);
+					////System.out.println("after clear record is  " + record111);
+					////System.out.println("after clear answer is  " + answer111);
 					record1max = result.get(i).toString().split("\\|")[0];
 				}
 				if (i==result.size()-1 ){
@@ -252,7 +276,7 @@ public class aggV2 {
 						
 						StringBuilder mysb = new StringBuilder();
 						mysb.append("|" +addb[0]); 
-//						System.out.println("---"+addb[j]+"  "+result.get(Integer.valueOf(addb[j])));
+//						//System.out.println("---"+addb[j]+"  "+result.get(Integer.valueOf(addb[j])));
 						result.get(Integer.valueOf(addb[j])).append(mysb);
 					}
 
@@ -269,10 +293,10 @@ public class aggV2 {
 
 				}
 			}
-			System.out.println("\n");
+			//System.out.println("\n");
 			
 			for (StringBuilder s : result){
-				System.out.println(s);
+				//System.out.println(s);
 			}
 			
 			
@@ -310,7 +334,7 @@ public class aggV2 {
 		}else{
 			ArrayList<String> tName = parseSelect.getFromTable();
 			if(tName.size()!=1){
-				//System.err.println("do not specify table name");
+				////System.err.println("do not specify table name");
 				return result;
 			}
 			atableName = tName.get(0);
@@ -341,7 +365,23 @@ public class aggV2 {
 			String [] firstRec1 = result.get(0).toString().split("\\|");
 			String record1 =firstRec1[acolNum] ;
 			String answer1 = firstRec1[acolNum] + "|" + "0";
+			String[] rowStrings3;
 			for (int i = 1 ; i<result.size();i++){
+				
+		
+					
+
+			
+						rowStrings3 = result.get(0).toString().split("\\|");
+
+						if(i==0){
+							updateSchema(schema,operator,rowStrings3);
+							
+						}
+				
+				
+				
+				
 				String[] incomingRow = result.get(i).toString().split("\\|");
 				
 				if (tool.isLarge(aclotype, incomingRow[acolNum], record1)){
@@ -358,8 +398,8 @@ public class aggV2 {
 					answer1 = incomingRow[acolNum]+"|" +i ;
 				}
 			}
-			//System.out.println(record1);
-			//System.out.println(answer1);
+			////System.out.println(record1);
+			////System.out.println(answer1);
 			StringBuilder mysb = new StringBuilder();
 			mysb.append("|"  +record1);
 			StringBuilder mynull = new StringBuilder();
@@ -367,18 +407,18 @@ public class aggV2 {
 			String[] addBack1 = answer1.split("\\|");
 			for (int i =1 ; i<addBack1.length;i++){
 				
-				//System.out.println(addBack1[i]);
+				////System.out.println(addBack1[i]);
 				
 				
 				result.get(Integer.valueOf(addBack1[i])).append(mysb);
-				////System.out.println(i);
+				//////System.out.println(i);
 			}
 
 			for ( int i =0 ; i< result.size();i++){
 				String [] temp = result.get(i).toString().split("\\|");
 				if (temp.length==oriLen){
 					result.get(i).append(mynull);
-//					//System.out.println("has" +i);
+//					////System.out.println("has" +i);
 				}
 			}
 			break;
@@ -391,7 +431,19 @@ public class aggV2 {
 			String [] firstRec11 = result.get(0).toString().split("\\|");
 			String record11 =firstRec11[acolNum] ;
 			String answer11 = firstRec11[acolNum] + "|" + "0";
+			
+			
+			String[] rowStrings4;
 			for (int i = 1 ; i<result.size();i++){
+
+							rowStrings4 = result.get(0).toString().split("\\|");
+
+							if(i==0){
+								updateSchema(schema,operator,rowStrings4);
+								
+							}
+
+				
 				String[] incomingRow = result.get(i).toString().split("\\|");
 				
 				if (tool.isLarge(aclotype, incomingRow[acolNum], record11)==false){
@@ -409,8 +461,8 @@ public class aggV2 {
 					answer11 = incomingRow[acolNum]+"|" +i ;
 				}
 			}
-			//System.out.println(record11);
-			//System.out.println(answer11);
+			////System.out.println(record11);
+			////System.out.println(answer11);
 			StringBuilder mysb1 = new StringBuilder();
 			mysb1.append("|"  +record11);
 			StringBuilder mynull1 = new StringBuilder();
@@ -418,18 +470,18 @@ public class aggV2 {
 			String[] addBack11 = answer11.split("\\|");
 			for (int i =1 ; i<addBack11.length;i++){
 				
-				//System.out.println(addBack11[i]);
+				////System.out.println(addBack11[i]);
 				
 				
 				result.get(Integer.valueOf(addBack11[i])).append(mysb1);
-				////System.out.println(i);
+				//////System.out.println(i);
 			}
 
 			for ( int i =0 ; i< result.size();i++){
 				String [] temp = result.get(i).toString().split("\\|");
 				if (temp.length==oriLen1){
 					result.get(i).append(mynull1);
-//					//System.out.println("has" +i);
+//					////System.out.println("has" +i);
 				}
 			}
 			break;
