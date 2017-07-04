@@ -5,23 +5,30 @@ import java.util.HashMap;
 
 
 public class select {
+	
 	//query contains upper cases and lower cases
 	public static StringBuilder selectRow(HashMap<String, HashMap<String, String>> schema,
 			StringBuilder row, String query){
 		
-		StringBuilder sb = new StringBuilder();
+		//StringBuilder sb = new StringBuilder();
 
 		if(schema.size()>0 && row.length()>0){
 			//Ex. query = "publication.pubDate > '2017-01-01'";
+			
+//			if(query.contains("in")){
+//				InSelect(schema, row, query);
+//				return row;
+//			}
+			
+			
 			//get table name
-			String[] rowStrings = row.toString().split("\\|");
-
 			//get the type and column of attribute
-			String[] qstr = query.trim().split("\\s+");
+			String[] qstr = query.split("\\s+");
+			
+			String tableName = null;
+			String colName = null;
 			
 			//check if contains table name
-			String tableName;
-			String colName;
 			if(qstr[0].contains(".")){
 				String[] tcName = qstr[0].toLowerCase().split("\\.");
 				tableName = tcName[0];
@@ -33,12 +40,14 @@ public class select {
 				
 				if(tName.size()!=1){
 					System.err.println("do not specify table name");
-					return sb;
+					row.delete(0, row.length());
+					return row;
 				}
 				tableName = tName.get(0);
 				colName = qstr[0].toLowerCase();
 				
 			}
+			
 			
 			int colNum = tool.getColNum(schema, tableName, colName);
 			String type = tool.getColType(schema, tableName, colName);
@@ -64,48 +73,109 @@ public class select {
 				operator = "=";
 			}
 			
+			if(operator.equals("notlike")){
+				operator = "!=";
+			}
+			
+			String[] rowStrings = row.toString().split("\\|");
 			temp = rowStrings[colNum];
 			switch (operator) {
+			
+			case "!=":
+				
+				if(!temp.equals(operand)){
+					return row;
+				}
+				break;
+			
 			case "=":
 				
 				if(temp.equals(operand)){
-					sb.append(row);
-					return sb;
+					return row;
 				}
 				break;
 				
 			case ">":
 		
 				if(tool.isLarge(type, temp, operand)){
-					sb.append(row);
-					return sb;
+					return row;
 				}
 				
 				break;
 				
-			case ">=":
+			case "<=":
 				
 				if(!tool.isLarge(type, temp, operand)){
-					sb.append(row);
-					return sb;
+					return row;
 				}
 				
 				break;
 				
 			case "<":
-				if(tool.isLarge(type,operand,temp)){
-					sb.append(row);
-					return sb;
+				if(tool.isSmall(type, temp, operand)){
+					return row;
 				}
+				break;
+				
+			case ">=":
+				
+				if(!tool.isSmall(type, temp, operand)){
+					return row;
+				}
+				break;
 				
 
 			default:
 				break;
 			}	
+			row.delete(0, row.length());
+		}
+		return row;
+	}
+	
+	//"IN" operator 
+	public static StringBuilder InSelect(HashMap<String, HashMap<String, String>> schema,
+			StringBuilder row, String query, ArrayList<StringBuilder> result){
+		//Ex. query = "";
+		//get table name
+		//get the column of attribute
+		String[] qstr = query.split("\\s+");
+		
+		String tableName = null;
+		String colName = null;
+		
+		//check if contains table name
+		if(qstr[0].contains(".")){
+			String[] tcName = qstr[0].toLowerCase().split("\\.");
+			tableName = tcName[0];
+			colName = tcName[1];
+		}else{
+			
+			ArrayList<String> tName = new ArrayList<>();
+			tName= parseSelect.getFromTable();
+			
+			if(tName.size()!=1){
+				System.err.println("do not specify table name");
+				row.delete(0, row.length());
+				return row;
+			}
+			tableName = tName.get(0);
+			colName = qstr[0].toLowerCase();
+			
 		}
 		
-
-		return sb;
+		
+		int colNum = tool.getColNum(schema, tableName, colName);
+		
+		String rowString = row.toString().split("\\|")[colNum];
+		
+		for (int i = 0; i < result.size(); i++) {
+			if(!rowString.equals(result.get(i).toString())){
+				row.delete(0, row.length());
+			}
+		}
+		
+		return row;
 	}
 	
 }
