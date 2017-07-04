@@ -139,41 +139,44 @@ public class select {
 		//Ex. query = "";
 		//get table name
 		//get the column of attribute
-		String[] qstr = query.split("\\s+");
-		
-		String tableName = null;
-		String colName = null;
-		
-		//check if contains table name
-		if(qstr[0].contains(".")){
-			String[] tcName = qstr[0].toLowerCase().split("\\.");
-			tableName = tcName[0];
-			colName = tcName[1];
-		}else{
+		if(row.length() > 0){
+			String[] qstr = query.split("\\s+");
 			
-			ArrayList<String> tName = new ArrayList<>();
-			tName= parseSelect.getFromTable();
+			String tableName = null;
+			String colName = null;
 			
-			if(tName.size()!=1){
-				System.err.println("do not specify table name");
-				row.delete(0, row.length());
-				return row;
+			//check if contains table name
+			if(qstr[0].contains(".")){
+				String[] tcName = qstr[0].toLowerCase().split("\\.");
+				tableName = tcName[0];
+				colName = tcName[1];
+			}else{
+				
+				ArrayList<String> tName = new ArrayList<>();
+				tName= parseSelect.getFromTable();
+				
+				if(tName.size()!=1){
+					System.err.println("do not specify table name");
+					row.delete(0, row.length());
+					return row;
+				}
+				tableName = tName.get(0);
+				colName = qstr[0].toLowerCase();
+				
 			}
-			tableName = tName.get(0);
-			colName = qstr[0].toLowerCase();
 			
+			
+			int colNum = tool.getColNum(schema, tableName, colName);
+			String rowString = row.toString().split("\\|")[colNum];
+			
+			for (int i = 0; i < result.size(); i++) {
+				if(rowString.equals(result.get(i).toString())){
+					return row;
+				}
+			}
+			row.delete(0, row.length());
 		}
 		
-		
-		int colNum = tool.getColNum(schema, tableName, colName);
-		
-		String rowString = row.toString().split("\\|")[colNum];
-		
-		for (int i = 0; i < result.size(); i++) {
-			if(!rowString.equals(result.get(i).toString())){
-				row.delete(0, row.length());
-			}
-		}
 		
 		return row;
 	}
