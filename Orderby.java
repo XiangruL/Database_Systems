@@ -1,246 +1,364 @@
 package ParseSqlQuery;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.sql.Date;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
-import java.util.Locale;
+import java.util.HashMap;
 
-public class Orderby {
-	
-	
-	@SuppressWarnings("unchecked")
-	public static ArrayList<String> orderBy(String tableName1, String colName1,int colPos, String condtion,String colType){
-		ArrayList<String> WholeTable = new ArrayList<String>();
-		ArrayList<String> OutputTable = new ArrayList<String>();
-		ArrayList FinalTable = new ArrayList();
+import sql.evaluator.parseSelect;
+//score desc
+//score ASC
+//P.pubTypeID
+//P.pubTypeID desc
+//P.pubTypeID ASC
+//P.desc desc
+//P.ASC ASC
 
+public class Orderby2 {
+
+	public static ArrayList<StringBuilder> orderBy2(ArrayList<StringBuilder> result, HashMap<String, HashMap<String, String>> scheme,String query,StringBuilder singleRecord ){
+		//Below ---Extract the TableName,ColName,ColType from tool class for later use.
 		
-		File table1 = new File("C:/Users/Dan/workspace/562/src/publication.csv");
+	  
+		
+				String myTableName= "";
+				String myColName="";
+				String mySortingOrder="";
+				if (query.contains(".")){
+					int DotPos = query.indexOf(".");
+					myTableName = query.substring(0, DotPos);
+					String QwithoutTableName = query.substring(DotPos, query.length());
 
-		 //System.out.println(tableName1+".csv");
-
-		String line1 = "";
-		String line2 = "";
-		FileInputStream fr1;
-		try {
-			fr1 = new FileInputStream(table1);
-
-			BufferedReader br1 = new BufferedReader(new InputStreamReader(fr1));
-			ArrayList<String> SortedAttribute = new ArrayList<String>();
-			while((line1 = br1.readLine())!=null){
-			line1  = line1.replaceAll("﻿", "");
-				WholeTable.add(line1);
-				if (colPos == 0){
-					int start = 0;
-					int end = line1.indexOf("|", line1.indexOf("|") + colPos-1);
-					String temp = line1.substring(start,end);
-					SortedAttribute.add(temp);
-				}
-				
-				
-				else{
-//					String temp = line1+"|"+line2;
+					if (QwithoutTableName.contains(" ")){
+						int SpacePos = QwithoutTableName.indexOf(" ");
+						myColName = QwithoutTableName.substring(1,SpacePos);
 					
-				int start =	ordinalIndexOf(line1,"|",colPos)+1;
+					   mySortingOrder = QwithoutTableName.substring(SpacePos+1,QwithoutTableName.length());
 			
-				int end = 	ordinalIndexOf(line1,"|",colPos+1);
+					}
 				
-				if (end ==-1 ){
-					end = line1.length();
-				}
-//				System.out.println(start);
-//				System.out.println(end);
+				else {
+					myColName = QwithoutTableName.substring(1, QwithoutTableName.length());
 				
-				
-				
-				String temp = line1.substring(start,end);
-				//System.out.println(temp);
-				SortedAttribute.add(temp);
 				}
 
-				
-			}
-			//case 1 Int
-			if (colType == "Int"){
-			ArrayList<Integer> arrayOfInts = new ArrayList<Integer>();
-			for (String str : SortedAttribute) {
-			   arrayOfInts.add(Integer.parseInt((String)str));
-			}
-
-			if (condtion==null){
-				Collections.sort(arrayOfInts);
 			}
 			else {
-				Collections.sort(arrayOfInts);
-				Collections.reverse(arrayOfInts);
-//				System.out.println(arrayOfInts);
+				if (!query.contains(" ")){
+					myColName = query;
+
+				}		
+				else{
+					int SpacePos = query.indexOf(" ");
+					myColName = query.substring(0, SpacePos);
+					mySortingOrder = query.substring(SpacePos+1, query.length());			
+				}	
+			}
+
+				int myColPos= tool.getColNum(scheme, myTableName, myColName); 
+				String myColType= tool.getColType(scheme, myTableName, myColName); 
+
+				//Above ---Extract the TableName,ColName,ColType from tool class for later use.
 
 			
-			}	
-		      for (Integer i:arrayOfInts){
-		    	  FinalTable.add(i);
-		      }
+			if (result.size()==0){
+				result.add(singleRecord);
+				return result;
+			}
+				
+				String[] row = singleRecord.toString().split("\\|");
+		for (int i =0;i<result.size();i++){
 
+			
+			
+			
+			String[] tempRow = result.get(i).toString().split("\\|");
+
+			
+			if (!mySortingOrder.contains("desc")){
+
+				if (tool.isLarge(myColType, tempRow[myColPos], row[myColPos])){
+
+					result.add(i,singleRecord);
+
+					  for (StringBuilder ii :result) {
+				
+				        }
+					return result;
+				}
+				else{
+
+					if (i== result.size()-1){
+						result.add(singleRecord);
+						return result;
+					}
+
+				
+				}
 			}
 			
-			//case 2 Double
-			
-			if (colType == "Double"){
-				ArrayList<Double> arrayOfDouble = new ArrayList<Double>();
-				for (String str : SortedAttribute) {
-					arrayOfDouble.add(Double.parseDouble((String)str));
-				}
+			else {
 
-				if (condtion==null){
-					Collections.sort(arrayOfDouble);
-				}
-				else {
-					Collections.sort(arrayOfDouble);
-					Collections.reverse(arrayOfDouble);
+				if (tool.isLarge(myColType, tempRow[myColPos], row[myColPos])==false){
+
+					result.add(i,singleRecord);
+
+					  for (StringBuilder ii :result) {
 				
-				}	
-			      for (Double i:arrayOfDouble){
-			    	  FinalTable.add(i);
-			      }
-
+				        }
+					return result;
 				}
+				else{
 
-			//case 3 String
-			else if (colType == "String"){
-
-				if (condtion==null){
-					Collections.sort( SortedAttribute);
-					
-				}
-				else {
-					Collections.sort(SortedAttribute);
-					Collections.reverse( SortedAttribute);
-				
-				}
-			      for (String i:SortedAttribute){
-			    	 // System.out.println(i);
-			    	  FinalTable.add(i);
-			      }
-				
-				
-				
-				}
-			//case 4 Date
-				else if (colType == "Date"){
-					ArrayList<Date> arrayOfDate = new ArrayList<Date>();
-
-					
-				
-
-					for (String str : SortedAttribute) {
-
-									
-						
-						arrayOfDate.add(java.sql.Date.valueOf(str));
+					if (i== result.size()-1){
+						result.add(singleRecord);
+						return result;
 					}
-					
-					
-					
-					if (condtion==null){
-						Collections.sort(arrayOfDate);
-//						System.out.println("sort it asc ");
-//						System.out.println(arrayOfDate);
-						
-					}
-					else {
-						Collections.sort(arrayOfDate);
-						Collections.reverse(arrayOfDate);
-//System.out.println("wtf");
-					
-					}
-					
-				      for (Date i:arrayOfDate){
-				    	 // System.out.println(i);
-				    	  FinalTable.add(i);
-				      }
 
-					
-					}
-			
-
-
-			
-
-			
-			
-			
-			
-		    for (int i = 0 ;i <FinalTable.size();i++){
-		    	for (int j = 0; j<WholeTable.size();j++){
-		    		int start;
-		    		int end;
-		    		
-					if (colPos == 0){
-						 start = 0;
-						 end = WholeTable.get(j).indexOf("|", WholeTable.get(j).indexOf("|") + colPos-1);
+				
+				}
+			}
 		
-					
-					}
-					
-					
-					else{
-
-						
-						start =	ordinalIndexOf(WholeTable.get(j),"|",colPos)+1;
-				
-						end = ordinalIndexOf(WholeTable.get(j),"|",colPos+1);
-					
-					if (end ==-1 ){
-						end = WholeTable.get(j).length();
-					}
-					else {
-						
-					}
-
-					}
-
-					String temp = (String.valueOf(FinalTable.get(i)));
-					String temp2 =WholeTable.get(j).substring(start,end);
-//					System.out.println("temp is "+ temp);
-//					System.out.println("temp2 is " +temp2);
-		    		if (temp.equals(temp2)){
-		    			 //System.out.println("~#dnskfbnjiwebiurgb1iu2gviuv312jkhvrjdnasvhvqweqwejkqw");
-		  
-		    			OutputTable.add(WholeTable.get(j));
-		    			j = WholeTable.size()+1;
-		    		}
-		    		
-		    	}
-		    }
-		      
-		    
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}  
-		
-		for (String i:OutputTable){
-		 System.out.println(i);
 		}
-		return OutputTable;
+		
+
+		
+		return result;
+
 	}
 	
 	
+	public static ArrayList<StringBuilder> orderBy2g(ArrayList<StringBuilder> result, HashMap<String, HashMap<String, String>> scheme,String query,StringBuilder singleRecord, String groupQuery ){
+		//below extract group query info.
+		
+		//System.out.println("Result-------below ");
+		//System.out.println("\n");
+		   for (StringBuilder i: result){
+		    	 //System.out.println(i);
+		     }
+		//System.out.println("\n");
+		//System.out.println("Result-------above ");
+		//Below ---Extract the TableName,ColName,ColType from tool class for later use.
+		
+		//System.out.println("accepting what :  " + singleRecord);
+		String gtableName;
+		String gcolName;
+		if(groupQuery.contains(".")){
+			String[] gqstr = groupQuery.split("\\.");
+			gtableName = gqstr[0];
+			gcolName = gqstr[1];
+		}else{
+			
+			ArrayList<String> tName = parseSelect.getFromTable();
+			if(tName.size()!=1){
+				//////System.err.println("do not specify table name");
+				return result;
+			}
+			gtableName = tName.get(0);
+			gcolName = groupQuery;
+			
+		}
+
+				int gcolNum = tool.getColNum(scheme, gtableName, gcolName);
+				
+				
+				
+				
+				
+				//above extract group query info.
+				
+				
+				
+				
+				String myTableName= "";
+				String myColName="";
+				String mySortingOrder="";
+				if (query.contains(".")){
+					int DotPos = query.indexOf(".");
+					myTableName = query.substring(0, DotPos);
+					String QwithoutTableName = query.substring(DotPos, query.length());
+
+					if (QwithoutTableName.contains(" ")){
+						int SpacePos = QwithoutTableName.indexOf(" ");
+						myColName = QwithoutTableName.substring(1,SpacePos);
+					
+					   mySortingOrder = QwithoutTableName.substring(SpacePos+1,QwithoutTableName.length());
+			
+					}
+				
+				else {
+					myColName = QwithoutTableName.substring(1, QwithoutTableName.length());
+				
+				}
+
+			}
+			else {
+				if (!query.contains(" ")){
+					myColName = query;
+
+				}		
+				else{
+					int SpacePos = query.indexOf(" ");
+					myColName = query.substring(0, SpacePos);
+					mySortingOrder = query.substring(SpacePos+1, query.length());			
+				}	
+			}
+
+				int myColPos= tool.getColNum(scheme, myTableName, myColName); 
+				String myColType= tool.getColType(scheme, myTableName, myColName); 
+
+				//Above ---Extract the TableName,ColName,ColType from tool class for later use.
+
+			
+			if (result.size()==0){
+				result.add(singleRecord);
+				return result;
+			}
+				
 	
+				
+				
+				
+				
+		
+				myColPos = 0;// MUST DELETE!!!! SET IT TO DYNMAIC
+				///////End of infors//////
+				
+				
+				
+				
+				//System.out.println("gcol num " +gcolNum);
+				
+				//System.out.println("myColPos num  " +myColPos);
+				
+				//System.out.println("myColtype num  " +myColType);
+				
+				
+				String[] row = singleRecord.toString().split("\\|");
+				
+				String [] firstRec1 = result.get(result.size()-1).toString().split("\\|");
+				String record1 =firstRec1[gcolNum] ;
+				
+				//System.out.println("FIRST REC  " +record1);
+				//System.out.println("match first?  " +result.get(0).toString().split("\\|")[gcolNum]);
+				
+				if (singleRecord.toString().split("\\|")[gcolNum].equals(record1)){
+					////System.out.println(singleRecord + "vs " +record1);
+				
+		for (int i =0;i<result.size();i++){
+//			//System.out.println("A");
+			//System.out.println("Check BELOW");
+			//System.out.println("\n");
+			//System.out.println("This compare with below" +record1);
+			//System.out.println("this should be changing: " +result.get(i).toString().split("\\|")[gcolNum]);
+			//System.out.println("\n");
+			//System.out.println("check ABOVE");
+			
+			//When comparing, only gcolnum same can compare.
+			if (singleRecord.toString().split("\\|")[gcolNum].equals(result.get(i).toString().split("\\|")[gcolNum])){
+				
+			
+			
+//				//System.out.println("same"+ result.get(i));
+//				//System.out.println("!!!!!!!!!!!This " + result.get(i).toString().split("\\|")[gcolNum] +" is equal to "+ record1 +" and incoming is "+singleRecord);
+				
+				
+			
+			
+			
+			
+			
+			String[] tempRow = result.get(i).toString().split("\\|");
+
+			
+			if (!mySortingOrder.contains("desc")){
+
+				if (tool.isLarge(myColType, tempRow[myColPos], row[myColPos])){
+
+					result.add(i,singleRecord);
+
+					return result;
+				}
+				else{
+
+					if (i== result.size()-1){
+						result.add(singleRecord);
+						return result;
+					}
+
+				
+				}
+			}
+			
+			else {
+
+				if (tool.isLarge(myColType, tempRow[myColPos], row[myColPos])==false){
+
+					result.add(i,singleRecord);
+
+					return result;
+				}
+				else{
+
+					if (i== result.size()-1){
+						result.add(singleRecord);
+						return result;
+					}
+				}
+				
+				}
+			
+			}
+//			else{
+//				
+//
+////				record11 = result.get(i).toString().split("\\|")[acolNum];
+////				answer11 = result.get(i).toString().split("\\|")[acolNum]+ "|" + i;
+////				record1 = result.get(i).toString().split("\\|")[gcolNum];
+////				firstRec1 = result.get(i).toString().split("\\|");
+////				record1 =firstRec1[gcolNum] ;
+//				//System.out.println("\n");
+////				//System.out.println("From what ? " + result.get(i).toString().split("\\|")[gcolNum]);
+////				//System.out.println("to what ? " + record1);
+//				//System.out.println("This is coming!!! " + singleRecord);
+//				
+////				result.get(i).toString().split("\\|")[gcolNum].equals(record1)
+//				
+//				
+//				
+//			}
+		
+		}
+				}
+				else{
+					
+				
+					
+					//System.out.println(singleRecord + "break hereQ!~@~@~" + record1);
+					
+					record1 = singleRecord.toString().split("\\|")[gcolNum];
+					//System.out.println(singleRecord + "after reset" + record1);
+					result.add(result.size(),singleRecord);
+					
+					
+				}
+		
+
+		
+		return result;
+
+	
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+	}
 	static int ordinalIndexOf(String str, String substr, int n) {
 	    int pos = str.indexOf(substr);
 	    while (--n > 0 && pos != -1){
@@ -248,5 +366,4 @@ public class Orderby {
 	    }
 	    return pos;
 	}
-
 }
