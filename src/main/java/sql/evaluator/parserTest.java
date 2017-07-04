@@ -47,7 +47,7 @@ public class parserTest {
 						createTable.processSQL(ct);
 
 						//	LOGGER.log(Level.SEVERE, "Table name is " + ct.getTable().getName());
-					}		
+					}
 				}
 //				LOGGER.log(Level.SEVERE, "LINE: " + createTable.allTable.get("publicationType").get("pubTypeID"));
 //				LOGGER.log(Level.SEVERE, "LINE: " + createTable.allTable.get("publicationType").get("pubTypeID"));

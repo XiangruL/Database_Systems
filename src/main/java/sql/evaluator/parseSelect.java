@@ -2,6 +2,7 @@ package sql.evaluator;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -14,28 +15,43 @@ import net.sf.jsqlparser.expression.operators.conditional.OrExpression;
 import net.sf.jsqlparser.expression.operators.relational.EqualsTo;
 import net.sf.jsqlparser.expression.operators.relational.GreaterThan;
 import net.sf.jsqlparser.expression.operators.relational.GreaterThanEquals;
+import net.sf.jsqlparser.expression.operators.relational.InExpression;
 import net.sf.jsqlparser.expression.operators.relational.LikeExpression;
+import net.sf.jsqlparser.expression.operators.relational.MinorThan;
+import net.sf.jsqlparser.expression.operators.relational.MinorThanEquals;
+import net.sf.jsqlparser.expression.operators.relational.NotEqualsTo;
 import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.create.table.ColumnDefinition;
 import net.sf.jsqlparser.statement.select.Select;
 import net.sf.jsqlparser.statement.select.SelectBody;
 import net.sf.jsqlparser.statement.select.SelectItem;
+import net.sf.jsqlparser.statement.select.SetOperationList;
+import net.sf.jsqlparser.statement.select.SubSelect;
+import net.sf.jsqlparser.statement.select.Union;
+import net.sf.jsqlparser.statement.select.Distinct;
 import net.sf.jsqlparser.statement.select.FromItem;
 import net.sf.jsqlparser.statement.select.Join;
 import net.sf.jsqlparser.statement.select.OrderByElement;
 import net.sf.jsqlparser.statement.select.PlainSelect;
 public class parseSelect {
 	
-	private static HashMap<String, String> aliasNameMap = new HashMap<String, String>();
-	private static HashMap<String, HashMap<String, String>>  schema = createTable.allTable;
-	private static final Logger LOGGER = Logger.getLogger( parserTest.class.getName() );
+	protected static HashMap<String, String> aliasNameMap = new HashMap<String, String>();
+	protected static HashMap<String, HashMap<String, String>>  schema = createTable.allTable;
+	protected static final Logger LOGGER = Logger.getLogger( parserTest.class.getName() );
 	/* containing join condition, "table1.PID = table2.ID" */
-	private static ArrayList<String> joinTable;
-	private static ArrayList<Expression> condition;
-	private static ArrayList<String> whereCondition;
-	private static ArrayList<Expression> havingCondition;
-	private static ArrayList<String> fromTable;
-	private static ArrayList<String> projectTable;
+	protected static ArrayList<String> joinTable;
+	protected static ArrayList<Expression> condition;
+	protected static ArrayList<String> whereCondition;
+	protected static ArrayList<String> havingCondition;
+	protected static ArrayList<String> groupByTable;
+	protected static ArrayList<String> orderByTable;
+	protected static ArrayList<String> fromTable;
+	protected static ArrayList<String> projectTable;
+	protected static ArrayList<String> distinctTable;
+	protected static ArrayList<SelectBody> subQueryTable;
+	protected static ArrayList<StringBuilder> res;
+
+
 
 	public static void splitStatement(Statement stmt) {
 		/* store select statement output information
@@ -46,10 +62,15 @@ public class parseSelect {
 		 *            GROUP-BY: R.A
 		 *            ORDER-BY: R.C
 		 */
-		SelectBody selectBd = ((Select) stmt).getSelectBody(); 
+		SelectBody selectBd = ((Select) stmt).getSelectBody();
 		/* mapping alias to full table name
 		 * key - alias, value - table name
 		 */
+		if (selectBd instanceof SetOperationList) {
+			List<SelectBody> selects = ((SetOperationList) selectBd).getSelects();
+			System.out.println(selects);
+		}
+		
 		aliasNameMap = new HashMap<String, String>();
 		/* alias status */
 		boolean aliasFlag = false; 
@@ -67,14 +88,23 @@ public class parseSelect {
 		Expression whereEx = ((PlainSelect) selectBd).getWhere();
 		/* having conditions */
 		Expression havingEx = ((PlainSelect) selectBd).getHaving();
+		/* distinct item */
+		Distinct distinctI = ((PlainSelect) selectBd).getDistinct();
 		
+//		System.out.println(((Union) selectBd).toString());
+
 		List<Expression> whereList = new ArrayList<Expression>();
 		
 		condition = new ArrayList<Expression>();
 		whereCondition = new ArrayList<String>();
-		havingCondition = new ArrayList<Expression>(); 
+		havingCondition = new ArrayList<String>(); 
 		joinTable = new ArrayList<String>();
 		projectTable = new ArrayList<String>();
+		distinctTable = new ArrayList<String>();
+		groupByTable = new ArrayList<String>();
+		orderByTable = new ArrayList<String>();
+		subQueryTable = new ArrayList<SelectBody>();
+		res = new ArrayList<StringBuilder>();		
 		
 		/** get from item **/
 		StringBuilder from = new StringBuilder();
@@ -158,7 +188,6 @@ public class parseSelect {
 		select.insert(0, "SELECTION: ");
 		project.append("PROJECTION: ");
 		project.append(projectTable.toString().substring(1, projectTable.toString().length() - 1));
-		
 		select.append("\n");
 		project.append("\n");
 		
@@ -167,20 +196,15 @@ public class parseSelect {
 		StringBuilder groupBy = new StringBuilder();
 		groupBy.append("GROUP-BY: ");
 		if (groupByItemList == null) {
-			groupBy.append(groupByItemList);
+			groupByTable.add(null);
 		} else {
-			prefix = "";
 			for (Expression o : groupByItemList) {
-				groupBy.append(prefix);
-				prefix = ", ";
-				if (aliasFlag == true) {
-					groupBy = aliasToName(o, groupBy);
-				} else {
-					groupBy.append(o.toString().toLowerCase());
-				}
-
+				StringBuilder temp = new StringBuilder();
+				temp = aliasToName(o, temp);
+				groupByTable.add(temp.toString());
 			}
 		}
+		groupBy.append(groupByTable.toString().substring(1, groupByTable.toString().length() - 1));
 		groupBy.append("\n");
 		
 		
@@ -188,19 +212,15 @@ public class parseSelect {
 		StringBuilder orderBy = new StringBuilder();
 		orderBy.append("ORDER-BY: ");
 		if (orderByItemList == null) {
-			orderBy.append(orderByItemList);
+			orderByTable.add(null);
 		} else {
-			prefix = "";
 			for (OrderByElement o : orderByItemList) {
-				orderBy.append(prefix);
-				prefix = ", ";
-				if (aliasFlag == true) {
-					orderBy = aliasToName(o, orderBy);
-				} else {
-					orderBy.append(o.toString().toLowerCase());
-				}
+				StringBuilder temp = new StringBuilder();
+				temp =  aliasToName(o, temp);
+				orderByTable.add(temp.toString());
 			}
 		}
+		orderBy.append(orderByTable.toString().substring(1, orderByTable.toString().length() - 1));
 		orderBy.append("\n");
 		
 		
@@ -235,42 +255,69 @@ public class parseSelect {
 		for (Expression e : condition) {
 			whereCondition.add(parseWhereCondition(e));
 		}
-		
-		
-		
+				
 		/** get having **/
 		StringBuilder having = new StringBuilder();
 		// having contains and
-		if (havingEx instanceof AndExpression) {
-			havingCondition = (ArrayList<Expression>) visit((AndExpression) havingEx);
-		// there is a single where statement
-		} else if (havingEx instanceof OrExpression) {
-			havingCondition = (ArrayList<Expression>) visitOr((OrExpression) havingEx);
+		if (havingEx != null)
+			havingCondition.add(parseWhereCondition(havingEx));
+
+		
+		/** get distinct **/
+		if (distinctI != null) {
+			if (distinctI.toString().toLowerCase().equals("distinct")) {
+				distinctTable = new ArrayList<String>();
+				distinctTable.add(projectTable.get(0));
+			}
 		} else {
-			havingCondition.add(havingEx);
+			distinctTable = null;
+		}
+		
+		/** sort join table 
+		 * This step must be placed before parseSelect.algebraGen() **/
+		if (parseSelect.joinTable != null) {
+			parseSelect.sortJoinTable(parseSelect.joinTable);
+			parseSelect.sortFromTable(parseSelect.joinTable);
 		}
 
+		
 		/** Print out the query evaluated result **/
-		StringBuilder res = new StringBuilder();
-		res.append(project);
-		res.append(from);
-		res.append(select);
+ 
+		res.add(0, project);
+		res.add(1, from);
+		res.add(2, select);
 		if (join.charAt(join.length() - 2) == ',')
 			join.replace(join.length() - 2, join.length(), "\n");
 		
 		else  {
 			join.append("\n");
 		}
-		res.append(join);
-		res.append(groupBy);
-		res.append(orderBy);
+		res.add(3, join);
+		res.add(4, groupBy);
+		res.add(5, orderBy);
+		
+		if (!subQueryTable.isEmpty()) {
+			parseSubQuery();
+			System.out.print("not empty, do nothing");
+		} else {
+			printOutResult.printOutFinalResult(res);
+			ArrayList<StringBuilder> result = processPlainSelect.algebraGen();
+			printOutResult.printOutFinalResult(result);
+		}
+//		res.append(condition.toString());
+//		res.append(distinctTable);
+//		res.append(joinTable);
+//		res.append(fromTable);
 //		res.append(whereCondition);
 //		res.append(where);
+//		res.append("sub is" + subQueryTable);
 //		res.append(whereCondition.toString());
 //		res.append(havingCondition.toString());
-		System.out.println(res.toString());
+
 		
-		parseSelect.algebraGen();
+	}
+	
+	public static void parseSubQuery() {
 		
 	}
 	
@@ -302,7 +349,7 @@ public class parseSelect {
 			if (createTable.allTable.get((temp.split("\\."))[0]) != null) {
 				s.append(temp);
 			} else {
-				System.out.println("cannot find tthis table name");
+				s.append(temp);
 			}
 		}
 //		s.append(" ");
@@ -311,50 +358,111 @@ public class parseSelect {
 	
 	
 	/** generate relation algebra **/
-	public static void algebraGen() {
-		// no join
-		boolean startFlag = true;
-		boolean stopFlag = true;
-		boolean stopFlag2 = true;
-		ArrayList<scan> scanners = new ArrayList<scan>();
-		ArrayList<StringBuilder> result = new ArrayList<StringBuilder>();
-		String query = "";
+//	public static void algebraGen() {
+//		// control it's the first time to enter the join loop to scan a line
+//		boolean startFlag = true;
+//		// control to stop the outer loop or not
+//		boolean stopFlag = true;
+//		// control update schema or not
+//		boolean updateSchema = true;
+//		// order by exists or not
+//		boolean groupByFlag = false;
+//		ArrayList<scan> scanners = new ArrayList<scan>();
+//		ArrayList<StringBuilder> result = new ArrayList<StringBuilder>();
+//		String query = "";
 //		for (String s : fromTable) {
 //			scan current = new scan(s);
 //			scanners.add(current);
-//			stopFlag &= current.isFlag();
 //		}
-		scan scanner1 = new scan(fromTable.get(0));
-		scan scanner2 = new scan(fromTable.get(1));
-		// when table1 and table2 at the bottom, stopFlag becomes true
-		stopFlag = scanner1.isFlag() & scanner2.isFlag();
+//		stopFlag = scanners.get(0).isFlag();
+//		
+//		while (!stopFlag) {
+//			parseSelect.schema = createTable.allTable;
+//			StringBuilder temp2 = new StringBuilder();
+//			int joinIndex = 0;
+//			
+//			/* join */
+//			if (joinTable != null && !joinTable.isEmpty()) {
+//				temp2 = joinTwoTable(scanners.get(0), scanners.get(1), joinTable.get(joinIndex), startFlag, createTable.allTable, true, updateSchema);
+//				startFlag = false;
+//				if (temp2.length() == 0)
+//					break;
+//				joinIndex++;
+//
+//				for (int i = 2; i < scanners.size(); i++) {
+//					temp2 = parseSelect.joinRowAndTable(temp2, scanners.get(i), fromTable.get(i), joinTable.get(joinIndex), parseSelect.schema, false, updateSchema);
+//					if (temp2.length() == 0)
+//						break;
+//					joinIndex++;
+//				}
+//			} else {
+//				temp2 = scanners.get(0).scanFile();
+//			}
+//			if (temp2.length() == 0)
+//				break;
+//			// after joining once, no need to update schema
+//			stopFlag = scanners.get(0).isFlag();
+//			updateSchema = false;
+//
+//			/* where condition */
+//			if (whereCondition.size() != 0) {
+//				for (String s : whereCondition) {
+//					temp2 = select.selectRow(parseSelect.schema, temp2, s);
+//					// not meet the select requirement
+//					if (temp2 == null) {
+//						break;
+//					}
+//				}
+//			}	
+//			
+//			/* group by */
+//			if (parseSelect.groupByTable != null && parseSelect.groupByTable.get(0) != null) {
+//				groupByFlag = true;
+//				result = group.groupBy(result, parseSelect.schema, temp2, groupByTable.get(0));
+//			}
+//			
+//			/* order by */
+//			if (parseSelect.groupByTable != null && parseSelect.orderByTable.get(0) != null) {
+//				if (groupByFlag) {
+//					// orderBy2(ArrayList<StringBuilder> result, HashMap<String, HashMap<String, String>> scheme,String query,StringBuilder singleRecord )
+//					result = Orderby2.orderBy2(result, parseSelect.schema, orderByTable.get(0), temp2);
+//				} else {
+//					result = Orderby2.orderBy2(result, parseSelect.schema, orderByTable.get(0), temp2);
+//				}		
+//			}
+//			/* projection */
+//			if (!groupByFlag) {
+//				query = projectTable.toString().substring(1, projectTable.toString().length() - 1);
+//				result = projection.proTable(result, parseSelect.schema, temp2, query);
+//			}
+//			/* distinct */
+//			if (distinctTable != null) {
+//				query = distinctTable.toString().substring(1, distinctTable.toString().length() - 1);
+//				result = distinct.dist(parseSelect.schema, result, query.toString());
+//			}
+//		}
+//		
+//		/* having */
+//		if (!havingCondition.isEmpty()) {
+//			// havingSelect(HashMap<String, HashMap<String, String>> schema, ArrayList<StringBuilder> result, String aggQuery, String groupQuery)
+//			having.havingSelect(parseSelect.schema, result, havingCondition.get(0).toString().toLowerCase(), groupByTable.get(0));
+//		}
+//		
+//		/* projection if there has group by */
+//		if (groupByFlag) {
+//			query = projectTable.toString().substring(1, projectTable.toString().length() - 1);
+//			result = projection.proTable(result, parseSelect.schema, query);
+//		}
+//		
+//		/* distinct */
+//		if (groupByFlag && distinctTable != null) {
+//			query = distinctTable.toString().substring(1, distinctTable.toString().length() - 1);
+//			result = distinct.dist(parseSelect.schema, result, query.toString());
+//		}
 
-		while (!stopFlag) {
-			StringBuilder temp2 = joinTwoTable(scanner1, scanner2, joinTable.get(0), startFlag);
-			stopFlag = scanner1.isFlag() & scanner2.isFlag();
-			startFlag = false;
-
-			/* where condition */
-			if (whereCondition.size() != 0) {
-				for (String s : whereCondition) {
-					temp2 = select.selectRow(schema, temp2, s);
-					//						System.out.println(temp);
-
-					// not meet the select requirement
-					if (temp2 == null) {
-						break;
-					}
-				}
-			}
-
-			/* projection */
-			query = projectTable.toString().substring(1, projectTable.toString().length() - 1);
-			result = projection.proTable(result, schema, temp2, query, -1);
-		}
-
-		for (StringBuilder s : result)
-			System.out.println(s.toString());
-	}
+//		for (StringBuilder s : result)
+//			System.out.println(s.toString());
+//	}
 
 	
 	/** parse where/having statement containing and
@@ -445,32 +553,6 @@ public class parseSelect {
 		return join;
 	}
 
-	/** parse where condition
-	 * if there is alias in the left expression, change it to full name 
-	 * 
-	 * @param s - where condition, eg "T.name = 1"
-	 * @return - return full name with condition, eg "table.name = 1"
-	 */
-	public static String parseWhereCondition(Expression s) {
-		if (s instanceof EqualsTo) {
-			Expression rightE = ((EqualsTo) s).getRightExpression();
-			Expression leftE = ((EqualsTo) s).getLeftExpression();
-			StringBuilder temp = new StringBuilder();
-			temp = aliasToName(leftE, temp);
-			temp.append(" = ");
-			temp.append(rightE.toString());
-			return temp.toString();		
-		} else if (s instanceof GreaterThan) {
-			
-		} else if (s instanceof GreaterThanEquals) {
-			
-		} else if (s instanceof LikeExpression) {
-			
-		} else {
-			
-		}
-		return s.toString();
-	}
 	
 	/** 
 	 * @return fromTable containing from item
@@ -488,7 +570,7 @@ public class parseSelect {
 	 * @param startFlag - true if it's first time to enter the join
 	 * @return
 	 */
-	public static StringBuilder joinTwoTable(scan scanner1, scan scanner2, String query, boolean startFlag) {
+	public static StringBuilder joinTwoTable(scan scanner1, scan scanner2, String query, boolean startFlag, HashMap<String, HashMap<String, String>> oldschema, boolean joinF, boolean updateSchema) {
 		boolean flag = scanner1.isFlag();
 		StringBuilder temp = new StringBuilder();
 		while (!scanner1.isFlag()) {
@@ -508,12 +590,9 @@ public class parseSelect {
 			// table2 does not reach the bottom
 			while(!scanner2.isFlag()) {
 				StringBuilder temp2 = new StringBuilder();
-				temp2 = join.joinRow(createTable.allTable, temp, scanner2.scanFile(), query, flag);
-				if (!flag) {
-					parseSelect.schema = join.getNewSchema();
-					flag = true;
-				}
+				temp2 = join.joinRow(oldschema, createTable.allTable, null,temp, scanner2.scanFile(), query, joinF, updateSchema);
 				if (temp2 != null && temp2.length() > 0) {
+					parseSelect.schema = join.getNewSchema();
 					return temp2;
 				}
 			}
@@ -521,4 +600,192 @@ public class parseSelect {
 		// no match at these two table, return an empty string builder
 		return new StringBuilder();
 	}
+	
+	/** join a pre-joined row and a row from a new table
+	 * 
+	 * @param row - pre-joined row
+	 * @param scanner - scanner to scan a row from a new table
+	 * @param tableName - a table need to update the schema
+	 * @param query - join statement, eg "A.a = B.b"
+	 * @param oldschema - schema to look up a column in a pre-joined row
+	 * @param joinF - true means two tables join, false means row and a table join
+	 * @param updateSchema - true need to update schema
+	 * @return a join output row
+	 */
+	public static StringBuilder joinRowAndTable(StringBuilder row, scan scanner, String tableName,String query, HashMap<String, HashMap<String, String>> oldschema, boolean joinF, boolean updateSchema) {
+		boolean flag = scanner.isFlag();
+		boolean schemaFlag = false;
+		StringBuilder temp = new StringBuilder();
+		while(!flag) {
+			flag = scanner.isFlag();
+			temp = join.joinRow(oldschema, createTable.allTable, tableName, row, scanner.scanFile(), query, joinF, updateSchema);
+			if (temp != null && temp.length() > 0) {
+				parseSelect.schema = join.getNewSchema();
+				return temp;
+			}
+		}
+		return temp;
+	}
+	
+	
+	/** sort join table, so it can use this table directly in joining operation
+	 * 
+	 * @param joinT - the complete join condition, eg, ["A.a = B.b", "B.a = C.d"]
+	 */
+	public static void sortJoinTable(ArrayList<String> joinT) {
+		ArrayList<String> newJoinTable = new ArrayList<String>();
+		HashSet<String> tableName = new HashSet<String>(); 
+		for (String s : joinT) {
+			String[] s1 = s.split(" = ");
+			String[] itm1 = s1[0].split("\\.");
+			String[] itm2 = s1[1].split("\\.");
+			// if at least one table showed before, put this condition in the join table 
+			if (tableName.size() == 0 || tableName.contains(itm1[0]) || tableName.contains(itm2[0])) {
+				tableName.add(itm1[0]);
+				tableName.add(itm2[0]);
+				newJoinTable.add(s);
+			} else {
+				joinT.add(s);
+			}
+		}
+		parseSelect.joinTable = newJoinTable;	
+	}
+	
+	/** sort from table, so it can use this table directly in joining operation
+	 * 
+	 * @param joinT - the complete join condition, eg, ["A.a = B.b", "B.a = C.d"]
+	 * so the new from table would be [A, B, C]
+	 */
+	public static void sortFromTable(ArrayList<String> joinT) {
+		ArrayList<String> newFromTable = new ArrayList<String>();
+		HashSet<String> tableName = new HashSet<String>(); 
+		for (String s : joinT) {
+			String[] s1 = s.split(" = ");
+			String[] itm1 = s1[0].split("\\.");
+			String[] itm2 = s1[1].split("\\.");
+			// if table name is not showed before, put it in the from table 
+			if (!tableName.contains(itm1[0])) {
+				tableName.add(itm1[0]);
+				newFromTable.add(itm1[0]);
+			}
+			if (!tableName.contains(itm2[0])) {
+				tableName.add(itm2[0]);
+				newFromTable.add(itm2[0]);
+			}
+		}
+		for (String s : parseSelect.fromTable) {
+			if (!tableName.contains(s)) {
+				tableName.add(s);
+				newFromTable.add(s);
+			}
+		}
+		parseSelect.fromTable = newFromTable;
+	}
+
+	/** parse where condition
+	 * if there is alias in the left expression, change it to full name 
+	 * 
+	 * @param s - where condition, eg "T.name = 1"
+	 * @return - return full name with condition, eg "table.name = 1"
+	 */
+	public static String parseWhereCondition(Expression s) {
+		if (s instanceof EqualsTo) {
+			Expression rightE = ((EqualsTo) s).getRightExpression();
+			Expression leftE = ((EqualsTo) s).getLeftExpression();
+			StringBuilder temp = new StringBuilder();
+			if (leftE.toString().contains("*")) {
+				temp.append(leftE.toString());
+			} else {
+				temp = aliasToName(leftE, temp);
+			}
+			temp.append(" = ");
+			temp.append(rightE.toString());
+			return temp.toString();		
+		} else if (s instanceof GreaterThan) {
+			Expression rightE = ((GreaterThan) s).getRightExpression();
+			Expression leftE = ((GreaterThan) s).getLeftExpression();
+			StringBuilder temp = new StringBuilder();
+			if (leftE.toString().contains("*")) {
+				temp.append(leftE.toString());
+			} else {
+				temp = aliasToName(leftE, temp);
+			}			
+			temp.append(" > ");
+			temp.append(rightE.toString());
+			return temp.toString();	
+		} else if (s instanceof GreaterThanEquals) {
+			Expression rightE = ((GreaterThanEquals) s).getRightExpression();
+			Expression leftE = ((GreaterThanEquals) s).getLeftExpression();
+			StringBuilder temp = new StringBuilder();
+			if (leftE.toString().contains("*")) {
+				temp.append(leftE.toString());
+			} else {
+				temp = aliasToName(leftE, temp);
+			}			
+			temp.append(" >= ");
+			temp.append(rightE.toString());
+			return temp.toString();	
+		} else if (s instanceof LikeExpression) {
+			Expression rightE = ((LikeExpression) s).getRightExpression();
+			Expression leftE = ((LikeExpression) s).getLeftExpression();
+			StringBuilder temp = new StringBuilder();
+			if (leftE.toString().contains("*")) {
+				temp.append(leftE.toString());
+			} else {
+				temp = aliasToName(leftE, temp);
+			}	
+			if (s.toString().toLowerCase().contains("not like")) {
+				temp.append(" notlike ");
+			} else {
+				temp.append(" like ");
+			}
+			temp.append(rightE.toString());
+			return temp.toString();	
+		} else if (s instanceof MinorThanEquals) {
+			Expression rightE = ((MinorThanEquals) s).getRightExpression();
+			Expression leftE = ((MinorThanEquals) s).getLeftExpression();
+			StringBuilder temp = new StringBuilder();
+			if (leftE.toString().contains("*")) {
+				temp.append(leftE.toString());
+			} else {
+				temp = aliasToName(leftE, temp);
+			}				
+			temp.append(" <= ");
+			temp.append(rightE.toString());
+			return temp.toString();	
+		} else if (s instanceof MinorThan) {
+			Expression rightE = ((MinorThan) s).getRightExpression();
+			Expression leftE = ((MinorThan) s).getLeftExpression();
+			StringBuilder temp = new StringBuilder();
+			if (leftE.toString().contains("*")) {
+				temp.append(leftE.toString());
+			} else {
+				temp = aliasToName(leftE, temp);
+			}				
+			temp.append(" < ");
+			temp.append(rightE.toString());
+			return temp.toString();	
+		} else if (s instanceof NotEqualsTo) {
+			Expression rightE = ((NotEqualsTo) s).getRightExpression();
+			Expression leftE = ((NotEqualsTo) s).getLeftExpression();
+			StringBuilder temp = new StringBuilder();
+			if (leftE.toString().contains("*")) {
+				temp.append(leftE.toString());
+			} else {
+				temp = aliasToName(leftE, temp);
+			}				
+			temp.append(" != ");
+			temp.append(rightE.toString());
+			return temp.toString();	
+		}  else if (s instanceof InExpression) {
+			Expression leftE = ((InExpression) s).getLeftExpression();
+			StringBuilder temp = new StringBuilder();
+			temp = aliasToName(leftE, temp);
+			temp.append(" in ");
+			subQueryTable.add((SelectBody) ((SubSelect) ((InExpression) s).getRightItemsList()).getSelectBody());
+			return temp.toString();	
+		}
+		return s.toString();
+	}
+	
 }
