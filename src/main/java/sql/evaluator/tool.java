@@ -46,18 +46,7 @@ public class tool {
 		return colType;
 	}
 	
-//	public static String getTableName(StringBuilder row){
-//		String tableName = "";
-//		String[] str = row.toString().split("\\|");
-//		tableName = str[str.length-1];	
-//		return tableName;
-//	}
-//	
-
-	
-	
-	
-	
+	//check operand1 is larger than operand2
 	public static boolean isLarge(String type, String operand1, String operand2){
 		
 		//classify based on data type
@@ -76,14 +65,12 @@ public class tool {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			
 			break;
 			
 		case "varchar":
-			
-			
-			
-			
+			if(operand1.compareTo(operand2)>0){
+				return true;
+			}
 			break;
 		
 		case "integer":
@@ -94,6 +81,15 @@ public class tool {
 			}
 		
 			break;
+			
+		case "double":
+			double num3 = Double.valueOf(operand1);
+			double num4 = Double.valueOf(operand2);
+			if(num3 > num4){
+				return true;
+			}
+			
+			break;
 
 		default:
 			break;
@@ -101,6 +97,11 @@ public class tool {
 		
 		
 		return false;
+	}
+	
+	//check operand1 is small than operand2
+	public static boolean isSmall(String type, String operand1, String operand2){
+		return isLarge(type, operand2, operand1);
 	}
 
 }

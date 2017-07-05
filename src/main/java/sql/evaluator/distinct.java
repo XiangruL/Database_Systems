@@ -5,176 +5,99 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class distinct {
-	public static ArrayList<StringBuilder> dist(HashMap<String, HashMap<String, String>> schema,
-			ArrayList<StringBuilder> result, String query){
-		
-//		for (StringBuilder i : result) {
-//			System.out.println(" Before removal: " +i);
-//		}
-		
-		
-		////System.out.println(MarkedDup);
-		Map<Integer, Object> map = new HashMap<Integer, Object>();
-		String repeat ="";
-		String temp="";
-		int cout = 0;
-
-		String myTableName="";
-		String myColName="";
-		int myColPos=2;
-		//Below ---Extract the TableName,ColName,ColType from tool class for later use.
-				if (query.contains(".")){
-					int DotPos = query.indexOf(".");
-					myTableName = query.substring(0, DotPos);
-					String QwithoutTableName = query.substring(DotPos, query.length());
-
-					if (QwithoutTableName.contains(" ")){
-						int SpacePos = QwithoutTableName.indexOf(" ");
-						myColName = QwithoutTableName.substring(1,SpacePos);
-					
-					  
-			
-					}
-				
-				else {
-					myColName = QwithoutTableName.substring(1, QwithoutTableName.length());
-				
-				}
-
+	
+	//distinct after projection
+	public static ArrayList<StringBuilder> dist(ArrayList<StringBuilder> result){
+	
+		Map<Integer, String> map = new HashMap<Integer, String>();
+		String row;
+		for (int i = 0; i < result.size(); i++) {
+			row = result.get(i).toString().split(",")[0];
+			if(map.containsValue(row)){
+				result.remove(i);
+				i--;
+			}else{
+				map.put(i, row);
 			}
-			else {
-				if (!query.contains(" ")){
-					myColName = query;
-
-				}		
-				else{
-					int SpacePos = query.indexOf(" ");
-					myColName = query.substring(0, SpacePos);
-					
-				}	
-			}
-				//above is extraction of TableName and ColName
-//				myColPos = tool.getColNum(schema, myTableName, myColName);
-				
-				
-				//System.out.println(myTableName);
-				//System.out.println(myColName);
-				//System.out.println(myColPos);
-//			System.out.println("I am removing duplicate at col AT " + myColPos );
-				for (int i =0;i<result.size();i++){
-
-					
-					if (myColPos == 0){
-						 int start = 0;
-						 int end = result.get(i).indexOf("|", result.get(i).indexOf("|") + myColPos-1);
-							//System.out.println(start);
-							//System.out.println(end);
-							repeat= result.get(i).toString().substring(start,end);
-							//System.out.println(temp);
-							if (map.containsValue(repeat)){
-								
-								
-								
-								
-//								System.out.println(repeat +" got removed");
-								result.remove(i);
-								i=i-1;
-					
-							}
-							else {
-								map.put(i, repeat);
-//								System.out.println(i + " was put into the map");
-								
-							}
-					
-					}
-					
-					
-					else{
-
-
-						int start =	ordinalIndexOf(result.get(i).toString(),"|",myColPos)+1;
-				
-						int end = ordinalIndexOf(result.get(i).toString(),"|",myColPos+1);
-						
-						if (end ==-1 ){
-							end = result.get(i).length();
-						}
-
-						//System.out.println(start);
-						//System.out.println(end);
-						repeat= result.get(i).toString().substring(start,end);
-						//System.out.println(repeat);
-						
-						if (map.containsValue(repeat)){
-							
-							
-							
-							
-//							System.out.println(repeat +" got removed");
-							result.remove(i);
-							i=i-1;
-				
-						}
-						else {
-							map.put(i, repeat);
-						}
-						
-						//System.out.println("wtf" +repeat);
-						//System.out.println(i);
-						
-						
-						
-						
-						
-						
-						
-						
-					}
-					
-					
-					
-					
-					cout=cout+1;
-				}
-				
-				
-			
+		}
+		return result;
+	}
+	
+	//distinct before projection with result table
+	public static ArrayList<StringBuilder> dist(ArrayList<StringBuilder> result,
+			HashMap<String, HashMap<String, String>> schema, String query){
 		
+		Map<Integer, String> map = new HashMap<Integer, String>();
+		String row;
+		String[] qstr = query.split(", ");
+		String tableName;
+		String colName;
+		int colNum;
 		
-		
-		
-
-
-
-				
-//				for (StringBuilder i : result) {
-//					//System.out.println(i);
-//					System.out.println(" After removal: " +i);
-//				}
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
+		if(qstr[0].contains(".")){
+			String[] tcName = qstr[0].split("\\.");
+			tableName = tcName[0];
+			colName = tcName[1];
+		}else{
+			ArrayList<String> tName = parseSelect.getFromTable();
+			if(tName.size()!=1){
+				System.err.println("do not specify table name");
 				return result;
+			}
+			tableName = tName.get(0);
+			colName = qstr[0];
+		}
+		colNum = tool.getColNum(schema, tableName, colName);
 		
 		
-		
-		
-		
-}
-	static int ordinalIndexOf(String str, String substr, int n) {
-	    int pos = str.indexOf(substr);
-	    while (--n > 0 && pos != -1){
-	        pos = str.indexOf(substr, pos + 1);
-	    }
-	    return pos;
+		for (int i = 0; i < result.size(); i++) {
+			row = result.get(i).toString().split("\\|")[colNum];
+			if(map.containsValue(row)){
+				result.remove(i);
+				i--;
+			}else{
+				map.put(i, row);
+			}
+		}
+		return result;
+	}
+	
+	//distinct before projection with row
+	//if the given row is already in the result table
+	//empty row and return it
+	public static StringBuilder dist(ArrayList<StringBuilder> result,
+			HashMap<String, HashMap<String, String>> schema, StringBuilder row, String query){
+		if(row.length() > 0){
+			Map<Integer, String> map = new HashMap<Integer, String>();
+			String rowTemp;
+			String[] qstr = query.split(", ");
+			String tableName;
+			String colName;
+			int colNum;
+			
+			if(qstr[0].contains(".")){
+				String[] tcName = qstr[0].split("\\.");
+				tableName = tcName[0];
+				colName = tcName[1];
+			}else{
+				ArrayList<String> tName = parseSelect.getFromTable();
+				if(tName.size()!=1){
+					System.err.println("do not specify table name");
+					return row;
+				}
+				tableName = tName.get(0);
+				colName = qstr[0];
+			}
+			colNum = tool.getColNum(schema, tableName, colName);
+			for (int i = 0; i < result.size(); i++) {
+				rowTemp = result.get(i).toString().split(",")[0];
+				
+				if(rowTemp.equals(row.toString().split("\\|")[colNum])){
+					row.delete(0, row.length());
+					return row;
+				}
+			}
+		}
+		return row;
 	}
 }

@@ -15,6 +15,7 @@ import net.sf.jsqlparser.statement.create.table.*;
 
 public class parserTest {
 	private static final Logger LOGGER = Logger.getLogger( parserTest.class.getName() );
+	protected static String path;
 	
 	public static void main(String[] args) {
 		
@@ -23,12 +24,8 @@ public class parserTest {
 		ArrayList<File> sqlFiles = new ArrayList<File>();
 		
 		for(i = 0; i < args.length; i++) {
-			if(args[i].equals("--data")) {
-				dataDir = new File(args[i+1]);
-				i++;
-			} else {
-				sqlFiles.add(new File(args[i]));
-			}
+			sqlFiles.add(new File(args[i]));
+			path = args[i];
 		}
 	
 		for (File sql : sqlFiles) {
@@ -41,7 +38,7 @@ public class parserTest {
 					Statement stmt = stmtList.get(j);
 					if (stmt instanceof Select) {
 						//LOGGER.log(Level.SEVERE,parseSelect.splitStatement(stmt));
-						parseSelect.splitStatement(stmt);
+						parseStatement.parsingWorkFlow(stmt);
 					} else if (stmt instanceof CreateTable) {
 						CreateTable ct = (CreateTable)stmt;
 						createTable.processSQL(ct);

@@ -5,19 +5,26 @@ import java.util.HashMap;
 
 public class projection {
 	
+	
+	//if flag is true, do distinct first, then do projection and store it in the array list
+	//projection line by line
 	public static ArrayList<StringBuilder> proTable(ArrayList<StringBuilder> result,
 			HashMap<String, HashMap<String, String>> schema, 
-			StringBuilder row,String query){
+			StringBuilder row,String query,boolean flag){
+		
+		if(flag){
+			
+			distinct.dist(result, schema, row, query);
+		}
 		
 		if(row.length()>0){
-			
 			//Parse the query, then get table name and column name
 			String[] qstr = query.split(", ");
 			
 			String[] rowString = row.toString().split("\\|");
 			String tableName = "";
 			String colName = "";
-			int colNum;
+			int colNum = 0;
 			StringBuilder sb = new StringBuilder();
 			
 			for (int i = 0; i < qstr.length; i++) {
@@ -44,13 +51,20 @@ public class projection {
 				sb.append(rowString[colNum]+",");
 			}
 			
-			result.add(sb);
+			result.add(sb);			
 		}
 		return result;
 	}
 	
+	
+	//projection a result table
+	//if flag is true, do the distinct first
 	public static ArrayList<StringBuilder> proTable(ArrayList<StringBuilder> result,
-			HashMap<String, HashMap<String, String>> schema, String query){
+			HashMap<String, HashMap<String, String>> schema, String query, boolean flag){
+		
+		if(flag){
+			distinct.dist(result, schema, query);
+		}
 		
 		StringBuilder sb = new StringBuilder();
 		String[] qstr = query.split(", ");

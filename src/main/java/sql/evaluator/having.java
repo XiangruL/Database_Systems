@@ -21,6 +21,7 @@ public class having {
 		String colName = qstr[0].split("\\(")[0];
 		
 		int colNum = tool.getColNum(schema, tableName, colName);
+		
 
 		double operand = Double.valueOf(qstr[2]);
 		String operator = qstr[1];

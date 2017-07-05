@@ -1,10 +1,17 @@
 package sql.evaluator;
 
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.HashMap;
+
+import net.sf.jsqlparser.statement.select.SelectBody;
 
 public class processPlainSelect {
 	/** generate relation algebra **/
-	public static ArrayList<StringBuilder> algebraGen() {
+	public static ArrayList<StringBuilder> algebraGen(
+			ArrayList<String> joinTable, ArrayList<String> whereCondition, ArrayList<String> havingCondition, 
+			ArrayList<String> groupByTable, ArrayList<String> orderByTable, ArrayList<String> fromTable,
+			ArrayList<String> projectTable, ArrayList<String> distinctTable, ArrayList<SelectBody> subQueryTable) {
 		// control it's the first time to enter the join loop to scan a line
 		boolean startFlag = true;
 		// control to stop the outer loop or not
@@ -16,7 +23,7 @@ public class processPlainSelect {
 		ArrayList<scan> scanners = new ArrayList<scan>();
 		ArrayList<StringBuilder> result = new ArrayList<StringBuilder>();
 		String query = "";
-		for (String s : parseSelect.fromTable) {
+		for (String s : fromTable) {
 			scan current = new scan(s);
 			scanners.add(current);
 		}
@@ -28,19 +35,19 @@ public class processPlainSelect {
 			int joinIndex = 0;
 			
 			/* join */
-			if (parseSelect.joinTable != null && !parseSelect.joinTable.isEmpty()) {
-				temp2 = parseSelect.joinTwoTable(scanners.get(0), scanners.get(1), parseSelect.joinTable.get(joinIndex), startFlag, createTable.allTable, true, updateSchema);
+			if (joinTable != null && !joinTable.isEmpty()) {
+				temp2 = parseSelect.joinTwoTable(scanners.get(0), scanners.get(1), joinTable.get(joinIndex), startFlag, createTable.allTable, true, updateSchema);
 				startFlag = false;
 				if (temp2.length() == 0)
 					break;
 				joinIndex++;
-
 				for (int i = 2; i < scanners.size(); i++) {
-					temp2 = parseSelect.joinRowAndTable(temp2, scanners.get(i), parseSelect.fromTable.get(i), parseSelect.joinTable.get(joinIndex), parseSelect.schema, false, updateSchema);
+					temp2 = parseSelect.joinRowAndTable(temp2, scanners.get(i), fromTable.get(i), joinTable.get(joinIndex), parseSelect.schema, false, updateSchema);
 					if (temp2.length() == 0)
 						break;
 					joinIndex++;
 				}
+				
 			} else {
 				temp2 = scanners.get(0).scanFile();
 			}
@@ -51,9 +58,16 @@ public class processPlainSelect {
 			updateSchema = false;
 
 			/* where condition */
-			if (parseSelect.whereCondition.size() != 0) {
-				for (String s : parseSelect.whereCondition) {
-					temp2 = select.selectRow(parseSelect.schema, temp2, s);
+			if (whereCondition.size() != 0) {
+				for (String s : whereCondition) {
+					String[] whereS = s.split(" ");
+					if (whereS.length == 2 && whereS[1].equals("in")) {
+						// InSelect(HashMap<String, HashMap<String, String>> schema, StringBuilder row, String query, ArrayList<StringBuilder> result)
+						temp2 = select.InSelect(parseSelect.schema, temp2, s, parseSelect.subRes);
+						System.out.print("temp2 is " + temp2);
+					} else {
+						temp2 = select.selectRow(parseSelect.schema, temp2, s);
+					}
 					// not meet the select requirement
 					if (temp2 == null) {
 						break;
@@ -61,43 +75,48 @@ public class processPlainSelect {
 				}
 			}	
 			
+			
+			
 			/* group by */
-			if (parseSelect.groupByTable != null && parseSelect.groupByTable.get(0) != null) {
+			if (groupByTable != null && groupByTable.get(0) != null) {
 				groupByFlag = true;
-				result = group.groupBy(result, parseSelect.schema, temp2, parseSelect.groupByTable.get(0));
+				result = group.groupBy(result, parseSelect.schema, temp2, groupByTable.get(0));
 			}
 			
 			/* order by */
-			if (parseSelect.groupByTable != null && parseSelect.orderByTable.get(0) != null) {
+			if (groupByTable != null && orderByTable.get(0) != null) {
 				if (groupByFlag) {
 					// orderBy2(ArrayList<StringBuilder> result, HashMap<String, HashMap<String, String>> scheme,String query,StringBuilder singleRecord )
-					result = Orderby2.orderBy2(result, parseSelect.schema, parseSelect.orderByTable.get(0), temp2);
+					result = Orderby2.orderBy2(result, parseSelect.schema, orderByTable.get(0), temp2);
 				} else {
-					result = Orderby2.orderBy2(result, parseSelect.schema, parseSelect.orderByTable.get(0), temp2);
+					result = Orderby2.orderBy2(result, parseSelect.schema, orderByTable.get(0), temp2);
 				}		
 			}
 			/* projection */
 			if (!groupByFlag) {
-				query = parseSelect.projectTable.toString().substring(1, parseSelect.projectTable.toString().length() - 1);
-				result = projection.proTable(result, parseSelect.schema, temp2, query);
-			}
-			/* distinct */
-			if (parseSelect.distinctTable != null) {
-				query = parseSelect.distinctTable.toString().substring(1, parseSelect.distinctTable.toString().length() - 1);
-				result = distinct.dist(parseSelect.schema, result, query.toString());
+				query = projectTable.toString().substring(1, projectTable.toString().length() - 1);
+				if (distinctTable != null) {
+					result = projection.proTable(result, parseSelect.schema, temp2, query, true);
+				} else {
+					result = projection.proTable(result, parseSelect.schema, temp2, query, false);
+				}
 			}
 		}
 		
 		/* having */
-		if (!parseSelect.havingCondition.isEmpty()) {
+		if (!havingCondition.isEmpty()) {
 			// havingSelect(HashMap<String, HashMap<String, String>> schema, ArrayList<StringBuilder> result, String aggQuery, String groupQuery)
-			having.havingSelect(parseSelect.schema, result, parseSelect.havingCondition.get(0).toString().toLowerCase(), parseSelect.groupByTable.get(0));
+			having.havingSelect(parseSelect.schema, result, havingCondition.get(0).toString().toLowerCase(), groupByTable.get(0));
 		}
 		
 		/* projection if there has group by */
 		if (groupByFlag) {
-			query = parseSelect.projectTable.toString().substring(1, parseSelect.projectTable.toString().length() - 1);
-			result = projection.proTable(result, parseSelect.schema, query);
+			query = projectTable.toString().substring(1, projectTable.toString().length() - 1);
+			if (distinctTable != null) {
+				result = projection.proTable(result, parseSelect.schema, query, true);
+			} else {
+				result = projection.proTable(result, parseSelect.schema, query, false);
+			}
 		}
 //		
 //		/* distinct */
