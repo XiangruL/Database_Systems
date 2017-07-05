@@ -1,9 +1,11 @@
-package sql.evaluator;
+package ParseSqlQuery;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+
+import sql.evaluator.parseSelect;
 
 public class aggregation {
 	
@@ -417,6 +419,10 @@ public class aggregation {
 				updateSchema(schema,operator,incomingRow);
 					
 			}
+			if (!incomingRow[acolNum].toLowerCase().equals("null")){
+				
+			
+			
 			if (result.get(i).toString().split("\\|")[gcolNum].equals(record1max)){
 				if (incomingRow[acolNum].equals(record111)){
 					answer111 = answer111 + "|" + i; 
@@ -438,6 +444,9 @@ public class aggregation {
 			if (i==result.size()-1 ){
 				posCount1.add( answer111);
 			}
+			
+			}
+			
 		}
 
 		
@@ -476,6 +485,8 @@ public class aggregation {
 		String[] incomingRow;
 		for (int i = 0 ; i<result.size();i++){
 			incomingRow = result.get(i).toString().split("\\|");
+			if (!incomingRow[acolNum].toLowerCase().equals("null")){
+			
 			if(i==0){
 				updateSchema(schema,operator,incomingRow);
 				
@@ -486,6 +497,9 @@ public class aggregation {
 			}else if (incomingRow[acolNum].equals(record11)){
 				answer11 = answer11 + "|" + i; 
 			}			
+			
+			}
+			
 		}
 		StringBuilder mysb1 = new StringBuilder();
 		mysb1.append("|"  +record11);
@@ -519,6 +533,8 @@ public class aggregation {
 			if(i==0){
 				updateSchema(schema,operator,incomingRow);	
 			}
+			
+			if (!incomingRow[acolNum].toLowerCase().equals("null")){
 			if (incomingRow[gcolNum].equals(record1)){
 				if (incomingRow[acolNum].equals(record11)){
 					answer11 = answer11 + "|" + i; 
@@ -543,6 +559,7 @@ public class aggregation {
 				posCount.add( answer11);
 				
 			}
+		}
 		}
 		
 		for (int i =0; i< posCount.size();i++){
@@ -582,7 +599,10 @@ public class aggregation {
 		String answer1 = firstRec1[acolNum];
 		String[] incomingRow;
 		for (int i = 0 ; i<result.size();i++){
+			
 			incomingRow = result.get(i).toString().split("\\|");
+			
+			if (!incomingRow[acolNum].toLowerCase().equals("null")){
 			if(i==0){
 				updateSchema(schema,operator,incomingRow);
 			}
@@ -592,6 +612,7 @@ public class aggregation {
 			}
 			else if (incomingRow[acolNum].equals(record1)){
 				answer1 = answer1 + "|" + i; 
+			}
 			}
 		}
 		StringBuilder mysb = new StringBuilder();
