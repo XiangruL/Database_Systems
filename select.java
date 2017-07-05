@@ -8,7 +8,7 @@ public class select {
 	
 	//query contains upper cases and lower cases
 	public static StringBuilder selectRow(HashMap<String, HashMap<String, String>> schema,
-			StringBuilder row, String query){
+			StringBuilder row, String query,ArrayList<String> tableNames){
 		
 		//StringBuilder sb = new StringBuilder();
 
@@ -34,16 +34,7 @@ public class select {
 				tableName = tcName[0];
 				colName = tcName[1];
 			}else{
-				
-				ArrayList<String> tName = new ArrayList<>();
-				tName= parseSelect.getFromTable();
-				
-				if(tName.size()!=1){
-					System.err.println("do not specify table name");
-					row.delete(0, row.length());
-					return row;
-				}
-				tableName = tName.get(0);
+				tableName = tableNames.get(0);
 				colName = qstr[0].toLowerCase();
 				
 			}
@@ -135,7 +126,8 @@ public class select {
 	
 	//"IN" operator 
 	public static StringBuilder InSelect(HashMap<String, HashMap<String, String>> schema,
-			StringBuilder row, String query, ArrayList<StringBuilder> result){
+			StringBuilder row, String query, ArrayList<StringBuilder> result,
+			ArrayList<String> tableNames){
 		//Ex. query = "";
 		//get table name
 		//get the column of attribute
@@ -151,16 +143,7 @@ public class select {
 				tableName = tcName[0];
 				colName = tcName[1];
 			}else{
-				
-				ArrayList<String> tName = new ArrayList<>();
-				tName= parseSelect.getFromTable();
-				
-				if(tName.size()!=1){
-					System.err.println("do not specify table name");
-					row.delete(0, row.length());
-					return row;
-				}
-				tableName = tName.get(0);
+				tableName = tableNames.get(0);
 				colName = qstr[0].toLowerCase();
 				
 			}

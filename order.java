@@ -17,7 +17,8 @@ import sql.evaluator.parseSelect;
 public class order{
 
 	public static ArrayList<StringBuilder> orderBy(HashMap<String, HashMap<String, String>> schema,
-			ArrayList<StringBuilder> result, StringBuilder row, String orderQuery){
+			ArrayList<StringBuilder> result, StringBuilder row, String orderQuery, 
+			ArrayList<String> tableNames){
 		if(row.length() == 0){
 			return result;
 		}
@@ -26,6 +27,7 @@ public class order{
 		String ocolName = null;
 		String order;
 		String[] oqstr = null;
+		
 		if(orderQuery.contains("desc")){
 			oqstr = orderQuery.split("\\s+");
 			order = "desc";
@@ -34,12 +36,7 @@ public class order{
 				otableName = qstr[0];
 				ocolName = qstr[1];
 			}else{
-				ArrayList<String> tName = parseSelect.getFromTable();
-				if(tName.size()!=1){
-					System.err.println("do not specify table name");
-					return result;
-				}
-				otableName = tName.get(0);
+				otableName = tableNames.get(0);
 				ocolName = oqstr[0];
 			}
 		}else if(orderQuery.contains("asc")){
@@ -50,13 +47,7 @@ public class order{
 				otableName = qstr[0];
 				ocolName = qstr[1];
 			}else{
-				
-				ArrayList<String> tName = parseSelect.getFromTable();
-				if(tName.size()!=1){
-					System.err.println("do not specify table name");
-					return result;
-				}
-				otableName = tName.get(0);
+				otableName =  tableNames.get(0);;
 				ocolName = oqstr[0];
 			}
 		}else{
@@ -66,13 +57,7 @@ public class order{
 				otableName = qstr[0];
 				ocolName = qstr[1];
 			}else{
-				
-				ArrayList<String> tName = parseSelect.getFromTable();
-				if(tName.size()!=1){
-					System.err.println("do not specify table name");
-					return result;
-				}
-				otableName = tName.get(0);
+				otableName = tableNames.get(0);;
 				ocolName = orderQuery;
 			}
 		}
@@ -101,7 +86,8 @@ public class order{
 }
 	
 	public static ArrayList<StringBuilder> orderBy(HashMap<String, HashMap<String, String>> schema,
-			ArrayList<StringBuilder> result, StringBuilder row, String orderQuery, String groupQuery ){
+			ArrayList<StringBuilder> result, StringBuilder row, String orderQuery, String groupQuery,
+			ArrayList<String> tableNames){
 		
 		if(row.length() == 0){
 			return result;
@@ -114,12 +100,7 @@ public class order{
 			gtableName = qstr[0];
 			gcolName = qstr[1];
 		}else{
-			ArrayList<String> tName = parseSelect.getFromTable();
-			if(tName.size()!=1){
-				System.err.println("do not specify table name");
-				return result;
-			}
-			gtableName = tName.get(0);
+			gtableName = tableNames.get(0);
 			gcolName = groupQuery;
 		}
 		//parse order by query
@@ -135,12 +116,7 @@ public class order{
 				otableName = qstr[0];
 				ocolName = qstr[1];
 			}else{
-				ArrayList<String> tName = parseSelect.getFromTable();
-				if(tName.size()!=1){
-					System.err.println("do not specify table name");
-					return result;
-				}
-				otableName = tName.get(0);
+				otableName = tableNames.get(0);
 				ocolName = oqstr[0];
 			}
 		}else if(orderQuery.contains("asc")){
@@ -151,13 +127,7 @@ public class order{
 				otableName = qstr[0];
 				ocolName = qstr[1];
 			}else{
-				
-				ArrayList<String> tName = parseSelect.getFromTable();
-				if(tName.size()!=1){
-					System.err.println("do not specify table name");
-					return result;
-				}
-				otableName = tName.get(0);
+				otableName = tableNames.get(0);
 				ocolName = oqstr[0];
 			}
 		}else{
@@ -167,13 +137,7 @@ public class order{
 				otableName = qstr[0];
 				ocolName = qstr[1];
 			}else{
-				
-				ArrayList<String> tName = parseSelect.getFromTable();
-				if(tName.size()!=1){
-					System.err.println("do not specify table name");
-					return result;
-				}
-				otableName = tName.get(0);
+				otableName = tableNames.get(0);
 				ocolName = orderQuery;
 			}
 		}

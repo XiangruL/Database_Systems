@@ -1,17 +1,15 @@
-package ParseSqlQuery;
+package sql.evaluator;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import sql.evaluator.parseSelect;
-
 public class aggregation {
 	
 	//aggregation with groupBy
 	public static ArrayList<StringBuilder> aggRow(HashMap<String, HashMap<String, String>> schema,
-			ArrayList<StringBuilder> result, String aggQuery, String groupQuery){
+			ArrayList<StringBuilder> result, String aggQuery, String groupQuery,ArrayList<String> tableNames){
 		//Ex. aggQuery = "count(author.instituteid)" 
 		//Ex. aggQuery = "count(instituteid)";
 		//Ex. aggQuery = "count(author.*)" ;
@@ -20,20 +18,13 @@ public class aggregation {
 		//parse groupby query, get the groupby table name and column name
 		String gtableName;
 		String gcolName;
-		if(groupQuery.contains(".")){
+		if(tableNames.size() == 1){
+			gtableName = tableNames.get(0);
+			gcolName = groupQuery;
+		}else{
 			String[] gqstr = groupQuery.split("\\.");
 			gtableName = gqstr[0];
 			gcolName = gqstr[1];
-		}else{
-			
-			ArrayList<String> tName = parseSelect.getFromTable();
-			if(tName.size()!=1){
-				System.err.println("do not specify table name");
-				return result;
-			}
-			gtableName = tName.get(0);
-			gcolName = groupQuery;
-			
 		}
 	
 		//parse the aggQuery get the table name and column name
@@ -59,12 +50,14 @@ public class aggregation {
 				acolName = tcName;
 			}
 		}
+		
 		int gcolNum = tool.getColNum(schema, gtableName, gcolName);
 		int acolNum = tool.getColNum(schema, atableName, acolName);
 		String type = tool.getColType(schema,atableName, acolName);
 		
 		switch (operator) {
 		case "count":
+			
 			updateRS(schema, result, count(result, acolNum, gcolNum), operator);
 			
 			break;
@@ -94,7 +87,7 @@ public class aggregation {
 	
 	//aggregation without any other operation
 	public static ArrayList<StringBuilder> aggRow(HashMap<String, HashMap<String, String>> schema,
-			ArrayList<StringBuilder> result, String aggQuery){
+			ArrayList<StringBuilder> result, String aggQuery,ArrayList<String> tableNames){
 		//parse the aggQuery get the table name and column name
 		String[] qstr = aggQuery.split("\\(");
 		String operator = qstr[0];
@@ -102,18 +95,13 @@ public class aggregation {
 		String tableName = "";
 		String colName = "";
 		
-		if(tcName.contains(".")){
+		if(tableNames.size() == 1){
+			tableName = tableNames.get(0);
+			colName = tcName;
+		}else{
 			String[] tcNames = tcName.split("\\.");
 			tableName = tcNames[0];
 			colName = tcNames[1];
-		}else{
-			ArrayList<String> tName = parseSelect.getFromTable();
-			if(tName.size()!=1){
-				System.err.println("do not specify table name");
-				return result;
-			}
-			tableName = tName.get(0);
-			colName = tcName;
 		}
 		
 		int colNum = tool.getColNum(schema, tableName, colName);
@@ -294,6 +282,7 @@ public class aggregation {
 				count++;
 			}
 		}
+		
 		aggResult = String.valueOf(count);
 		return aggResult;
 	}
@@ -419,10 +408,6 @@ public class aggregation {
 				updateSchema(schema,operator,incomingRow);
 					
 			}
-			if (!incomingRow[acolNum].toLowerCase().equals("null")){
-				
-			
-			
 			if (result.get(i).toString().split("\\|")[gcolNum].equals(record1max)){
 				if (incomingRow[acolNum].equals(record111)){
 					answer111 = answer111 + "|" + i; 
@@ -444,9 +429,6 @@ public class aggregation {
 			if (i==result.size()-1 ){
 				posCount1.add( answer111);
 			}
-			
-			}
-			
 		}
 
 		
@@ -485,8 +467,6 @@ public class aggregation {
 		String[] incomingRow;
 		for (int i = 0 ; i<result.size();i++){
 			incomingRow = result.get(i).toString().split("\\|");
-			if (!incomingRow[acolNum].toLowerCase().equals("null")){
-			
 			if(i==0){
 				updateSchema(schema,operator,incomingRow);
 				
@@ -497,9 +477,6 @@ public class aggregation {
 			}else if (incomingRow[acolNum].equals(record11)){
 				answer11 = answer11 + "|" + i; 
 			}			
-			
-			}
-			
 		}
 		StringBuilder mysb1 = new StringBuilder();
 		mysb1.append("|"  +record11);
@@ -533,8 +510,6 @@ public class aggregation {
 			if(i==0){
 				updateSchema(schema,operator,incomingRow);	
 			}
-			
-			if (!incomingRow[acolNum].toLowerCase().equals("null")){
 			if (incomingRow[gcolNum].equals(record1)){
 				if (incomingRow[acolNum].equals(record11)){
 					answer11 = answer11 + "|" + i; 
@@ -559,7 +534,6 @@ public class aggregation {
 				posCount.add( answer11);
 				
 			}
-		}
 		}
 		
 		for (int i =0; i< posCount.size();i++){
@@ -599,10 +573,7 @@ public class aggregation {
 		String answer1 = firstRec1[acolNum];
 		String[] incomingRow;
 		for (int i = 0 ; i<result.size();i++){
-			
 			incomingRow = result.get(i).toString().split("\\|");
-			
-			if (!incomingRow[acolNum].toLowerCase().equals("null")){
 			if(i==0){
 				updateSchema(schema,operator,incomingRow);
 			}
@@ -612,7 +583,6 @@ public class aggregation {
 			}
 			else if (incomingRow[acolNum].equals(record1)){
 				answer1 = answer1 + "|" + i; 
-			}
 			}
 		}
 		StringBuilder mysb = new StringBuilder();
