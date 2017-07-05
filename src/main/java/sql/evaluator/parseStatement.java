@@ -1,6 +1,7 @@
 package sql.evaluator;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.statement.Statement;
@@ -11,6 +12,7 @@ public class parseStatement {
 	
 	public static void parsingWorkFlow(Statement stmt) {
 		SelectBody selectBd = ((Select) stmt).getSelectBody();
+		parseSelect.aliasNameMap = new HashMap<String, String>();
 		parseSelect.schema = createTable.allTable;
 		parseSelect.joinTable = new ArrayList<String>();
 		parseSelect.condition = new ArrayList<Expression>();
@@ -23,7 +25,10 @@ public class parseStatement {
 		parseSelect.distinctTable = new ArrayList<String>();
 		parseSelect.subQueryTable = new ArrayList<SelectBody>();
 		parseSelect.res = new ArrayList<StringBuilder>();
-		parseSelect.subRes = new ArrayList<StringBuilder>();	
+		parseSelect.subRes = new ArrayList<StringBuilder>();
+		
+		System.out.println("===========================================================================================");
+		System.out.println("Query evaluation complete. Following is the result: ");
 		
 		parseSelect.splitStatement(selectBd, false);
 		

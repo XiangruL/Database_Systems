@@ -24,7 +24,7 @@ public class parserTest {
 		ArrayList<File> sqlFiles = new ArrayList<File>();
 		
 		for(i = 0; i < args.length; i++) {
-			sqlFiles.add(new File(args[i]));
+			sqlFiles.add(new File(args[i] + "schema.sql"));
 			path = args[i];
 		}
 	

@@ -39,18 +39,18 @@ public class parseSelect {
 	protected static HashMap<String, HashMap<String, String>>  schema = createTable.allTable;
 	protected static final Logger LOGGER = Logger.getLogger( parserTest.class.getName() );
 	/* containing join condition, "table1.PID = table2.ID" */
-	protected static ArrayList<String> joinTable = new ArrayList<String>();
-	protected static ArrayList<Expression> condition = new ArrayList<Expression>();
-	protected static ArrayList<String> whereCondition = new ArrayList<String>();
-	protected static ArrayList<String> havingCondition = new ArrayList<String>();
-	protected static ArrayList<String> groupByTable = new ArrayList<String>();
-	protected static ArrayList<String> orderByTable = new ArrayList<String>();
-	protected static ArrayList<String> fromTable = new ArrayList<String>();
-	protected static ArrayList<String> projectTable = new ArrayList<String>();
-	protected static ArrayList<String> distinctTable = new ArrayList<String>();
-	protected static ArrayList<SelectBody> subQueryTable = new ArrayList<SelectBody>();
-	protected static ArrayList<StringBuilder> res = new ArrayList<StringBuilder>();
-	protected static ArrayList<StringBuilder> subRes = new ArrayList<StringBuilder>();
+	protected static ArrayList<String> joinTable;
+	protected static ArrayList<Expression> condition;
+	protected static ArrayList<String> whereCondition;
+	protected static ArrayList<String> havingCondition;
+	protected static ArrayList<String> groupByTable;
+	protected static ArrayList<String> orderByTable;
+	protected static ArrayList<String> fromTable;
+	protected static ArrayList<String> projectTable;
+	protected static ArrayList<String> distinctTable;
+	protected static ArrayList<SelectBody> subQueryTable;
+	protected static ArrayList<StringBuilder> res;
+	protected static ArrayList<StringBuilder> subRes;
 
 
 	
@@ -112,7 +112,6 @@ public class parseSelect {
 		/** get from item **/
 		StringBuilder from = new StringBuilder();
 		from.append("FROM: ");
-		fromTable= new ArrayList<String>();
 		// has alias in from statement
 		if (fromItem.getAlias() != null && fromItem.getAlias().toString().length() != 0) {
 			// has alias, put it in alias-name map
@@ -405,10 +404,14 @@ public class parseSelect {
 
 				printOutResult.printQueryResult(res);
 				System.out.println("");
+				
 				ArrayList<StringBuilder> result = processPlainSelect.algebraGen(parseSelect.joinTable, parseSelect.whereCondition, parseSelect.havingCondition, parseSelect.groupByTable, parseSelect.orderByTable, parseSelect.fromTable, parseSelect.projectTable, parseSelect.distinctTable, subQueryTable);
 				printOutResult.printOutFinalResult(result);
+								
 				System.out.println("");
 				System.out.println("");
+				
+
 				
 			}
 		} else {
@@ -686,7 +689,7 @@ public class parseSelect {
 	 * @return fromTable containing from item
 	 */
 	public static ArrayList<String> getFromTable() {
-		return fromTable;
+		return parseSelect.fromTable;
 	}
 	
 	
@@ -719,6 +722,7 @@ public class parseSelect {
 			while(!scanner2.isFlag()) {
 				StringBuilder temp2 = new StringBuilder();
 				temp2 = join.joinRow(oldschema, createTable.allTable, null,temp, scanner2.scanFile(), query, joinF, updateSchema);
+				updateSchema = false;
 				if (temp2 != null && temp2.length() > 0) {
 					parseSelect.schema = join.getNewSchema();
 					return temp2;
@@ -747,6 +751,7 @@ public class parseSelect {
 		while(!flag) {
 			flag = scanner.isFlag();
 			temp = join.joinRow(oldschema, createTable.allTable, tableName, row, scanner.scanFile(), query, joinF, updateSchema);
+			updateSchema = false;
 			if (temp != null && temp.length() > 0) {
 				parseSelect.schema = join.getNewSchema();
 				return temp;

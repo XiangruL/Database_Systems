@@ -8,10 +8,10 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 
 public class scan {
-	int lineNum = 1;
-	int totalLineNum;
-	boolean flag = false;
-	String tableName;
+	private int lineNum = 1;
+	private int totalLineNum;
+	private boolean flag = false;
+	private String tableName;
 
 	public scan(String tableName) {
 		totalLineNum = getFileLine(tableName);
@@ -19,11 +19,12 @@ public class scan {
 	}
 	
 	public StringBuilder scanFile(){
+		String path = parserTest.path;
 		flag = false;
 		StringBuilder sb = new StringBuilder();
 		String line = "";
 		int count = 0;
-		File file = new File(tableName+".csv");
+		File file = new File(path+tableName+".csv");
 		try {
 			FileInputStream fis = new FileInputStream(file);
 			BufferedReader br = new BufferedReader(new InputStreamReader(fis));
@@ -50,7 +51,6 @@ public class scan {
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-			
 		}
 		
 		
@@ -102,6 +102,9 @@ public class scan {
 		this.flag = flag;
 	}
 
+	public String getTableName() {
+		return tableName;
+	}
 
 	
 	

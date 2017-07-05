@@ -54,6 +54,7 @@ public class processPlainSelect {
 			if (temp2.length() == 0)
 				break;
 			// after joining once, no need to update schema
+
 			stopFlag = scanners.get(0).isFlag();
 			updateSchema = false;
 
@@ -64,7 +65,6 @@ public class processPlainSelect {
 					if (whereS.length == 2 && whereS[1].equals("in")) {
 						// InSelect(HashMap<String, HashMap<String, String>> schema, StringBuilder row, String query, ArrayList<StringBuilder> result)
 						temp2 = select.InSelect(parseSelect.schema, temp2, s, parseSelect.subRes);
-						System.out.print("temp2 is " + temp2);
 					} else {
 						temp2 = select.selectRow(parseSelect.schema, temp2, s);
 					}
@@ -87,9 +87,12 @@ public class processPlainSelect {
 			if (groupByTable != null && orderByTable.get(0) != null) {
 				if (groupByFlag) {
 					// orderBy2(ArrayList<StringBuilder> result, HashMap<String, HashMap<String, String>> scheme,String query,StringBuilder singleRecord )
-					result = Orderby2.orderBy2(result, parseSelect.schema, orderByTable.get(0), temp2);
+					// result = Orderby2.orderBy2(result, parseSelect.schema, orderByTable.get(0), temp2);
+					result = order.orderBy(parseSelect.schema, result, temp2, orderByTable.get(0), groupByTable.get(0));
+
 				} else {
-					result = Orderby2.orderBy2(result, parseSelect.schema, orderByTable.get(0), temp2);
+					// orderBy(HashMap<String, HashMap<String, String>> schema, ArrayList<StringBuilder> result, String orderQuery,StringBuilder row )
+					//result = Orderby2.orderBy2g(result, parseSelect.schema, orderByTable.get(0), temp2, query);
 				}		
 			}
 			/* projection */
