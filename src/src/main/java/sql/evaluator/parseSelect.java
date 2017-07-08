@@ -54,7 +54,7 @@ public class parseSelect {
 
 	
 	
-	public static void splitStatement(SelectBody selectBd, boolean subQueryFlag) {
+	public static ArrayList<StringBuilder> splitStatement(SelectBody selectBd, boolean subQueryFlag) {
 		/* store select statement output information
 		 * format is: PROJECTION: R.A, R.B, R.C
 		 * 			  FROM: R, S
@@ -67,11 +67,7 @@ public class parseSelect {
 		/* mapping alias to full table name
 		 * key - alias, value - table name
 		 */
-		if (selectBd instanceof SetOperationList) {
-			List<SelectBody> selects = ((SetOperationList) selectBd).getSelects();
-			System.out.println(selects);
-			return;
-		}
+
 		
 		/* alias status */
 		boolean aliasFlag = false; 
@@ -401,21 +397,21 @@ public class parseSelect {
 			else {
 				// no nested query, just go through slipting and processing
 
-				printOutResult.printQueryResult(res);
-				System.out.println("");
+//				printOutResult.printQueryResult(res);
+//				System.out.println("");
 				
-				ArrayList<StringBuilder> result = processPlainSelect.algebraGen(parseSelect.joinTable, parseSelect.whereCondition, parseSelect.havingCondition, parseSelect.groupByTable, parseSelect.orderByTable, parseSelect.fromTable, parseSelect.projectTable, parseSelect.distinctTable, subQueryTable);
-				printOutResult.printOutFinalResult(result);
+//				printOutResult.printOutFinalResult(result);
 								
-				System.out.println("");
-				System.out.println("");
+//				System.out.println("");
+//				System.out.println("");
+				return processPlainSelect.algebraGen(parseSelect.joinTable, parseSelect.whereCondition, parseSelect.havingCondition, parseSelect.groupByTable, parseSelect.orderByTable, parseSelect.fromTable, parseSelect.projectTable, parseSelect.distinctTable, subQueryTable);
 				
 
 				
 			}
 		} else {
-			printOutResult.printQueryResult(res);
-//			subRes = processPlainSelect.algebraGen(subJoinTable, subWhereCondition, subHavingCondition, subGroupByTable, subOrderByTable, subFromTable, subProjectTable, subDistinctTable, subQueryTable);
+//			printOutResult.printQueryResult(res);
+			return processPlainSelect.algebraGen(subJoinTable, subWhereCondition, subHavingCondition, subGroupByTable, subOrderByTable, subFromTable, subProjectTable, subDistinctTable, subQueryTable);
 //			printOutResult.printQueryResult(subRes);
 		}
 //		res.append(condition.toString());
@@ -428,7 +424,7 @@ public class parseSelect {
 //		res.append(whereCondition.toString());
 //		res.append(havingCondition.toString());
 
-		
+		return new ArrayList<StringBuilder>();
 	}
 	
 	public static void parseSubQuery(SelectBody selectBd) {

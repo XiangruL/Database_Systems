@@ -14,31 +14,32 @@ public class parseStatement {
 	
 	public static void parsingWorkFlow(Statement stmt) {
 		SelectBody selectBd = ((Select) stmt).getSelectBody();
-		parseSelect.aliasNameMap = new HashMap<String, String>();
-		parseSelect.schema = createTable.allTable;
-		parseSelect.joinTable = new ArrayList<String>();
-		parseSelect.condition = new ArrayList<Expression>();
-		parseSelect.whereCondition = new ArrayList<String>();
-		parseSelect.havingCondition = new ArrayList<String>();
-		parseSelect.groupByTable = new ArrayList<String>();
-		parseSelect.orderByTable = new ArrayList<String>();
-		parseSelect.fromTable = new ArrayList<String>();
-		parseSelect.projectTable = new ArrayList<String>();
-		parseSelect.distinctTable = new ArrayList<String>();
-		parseSelect.subQueryTable = new ArrayList<SelectBody>();
-		parseSelect.res = new ArrayList<StringBuilder>();
-		parseSelect.subRes = new ArrayList<StringBuilder>();
+		/* refresh all parameters */
+		resetParameters.resetAll();
 		
 		System.out.println("===========================================================================================");
 		System.out.println("Query evaluation complete. Following is the result: ");
 		
+		/* when statement is union */
 		if (selectBd instanceof SetOperationList) {
 			List<SelectBody> selects = ((SetOperationList) selectBd).getSelects();
-			System.out.println(selects);
-			return;
+			ArrayList<StringBuilder> tempRes1 = parseSelect.splitStatement(selects.get(0), false);
+			resetParameters.resetAll();
+			ArrayList<StringBuilder> tempRes2 = parseSelect.splitStatement(selects.get(1), false);
+			ArrayList<StringBuilder> tempRes = union.unionTable(tempRes1, tempRes2);
+
+			printOutResult.printQueryResult(parseSelect.res);
+			System.out.println("");
+			printOutResult.printOutFinalResult(tempRes);
+		/* when statement is plain select */
+		} else {
+
+			ArrayList<StringBuilder> tempRes = parseSelect.splitStatement(selectBd, false);
+			printOutResult.printQueryResult(parseSelect.res);
+			System.out.println("");
+			printOutResult.printOutFinalResult(tempRes);
 		}
-		
-//		parseSelect.splitStatement(selectBd, false);
+
 		
 		
 	}

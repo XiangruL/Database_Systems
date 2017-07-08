@@ -32,6 +32,6 @@ public class createTable {
 			tableInfo.put(o.getColumnName().toLowerCase(), s.toString());
 			colNum++;
 		}
-		allTable.put(createTable.getTable().getName(), tableInfo);
+		allTable.put(createTable.getTable().getName().toLowerCase(), tableInfo);
 	}
 }

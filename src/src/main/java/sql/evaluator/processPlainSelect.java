@@ -44,9 +44,14 @@ public class processPlainSelect {
 //			StringBuilder temp2 = new StringBuilder();
 //			int joinIndex = 0;
 			
-			/* join */
+		if (joinTable.size() == 0) {
+			for (int i = 0; i < scanners.get(0).getTotalLineNum(); i++) {
+				StringBuilder temp = scanners.get(0).scanFile();
+				processAfterJoin(temp, whereCondition, havingCondition, groupByTable, orderByTable, fromTable, projectTable, distinctTable, subQueryTable);
+			}
+		}
 
-		
+		/* join */
 		if (joinTable.size() == 1) {
 			StringBuilder temp1;
 			StringBuilder temp2;
@@ -54,10 +59,13 @@ public class processPlainSelect {
 			for (int i = 0; i < scanners.get(0).getTotalLineNum(); i++) {
 				temp1 = scanners.get(0).scanFile();
 				for (int j  = 0; j < scanners.get(1).getTotalLineNum(); j++) {
-					temp2 = join.joinRow(createTable.allTable, createTable.allTable, null, temp1, scanners.get(1).scanFile(), joinTable.get(0), true, updateSchema);
+					temp3 = scanners.get(1).scanFile();
+//					System.out.println(temp3);
+					temp2 = join.joinRow(createTable.allTable, createTable.allTable, null, temp1, temp3, joinTable.get(0), true, updateSchema);
 					parseSelect.schema = join.getNewSchema();
 					updateSchema = false;
 					if (temp2.length() != 0) {
+//						System.out.println(parseSelect.schema);
 						processAfterJoin(temp2, whereCondition, havingCondition, groupByTable, orderByTable, fromTable, projectTable, distinctTable, subQueryTable);
 					}
 				}
@@ -73,6 +81,7 @@ public class processPlainSelect {
 			for (int i = 0; i < scanners.get(0).getTotalLineNum(); i++) {
 				temp1 = scanners.get(0).scanFile();
 				for (int j  = 0; j < scanners.get(1).getTotalLineNum(); j++) {
+					temp2 = new StringBuilder();
 					temp2 = join.joinRow(createTable.allTable, createTable.allTable, null, temp1, scanners.get(1).scanFile(), joinTable.get(0), true, updateSchema1);
 					parseSelect.schema = join.getNewSchema();
 					updateSchema1 = false;
@@ -80,10 +89,12 @@ public class processPlainSelect {
 						temp3 = new StringBuilder();
 						if (temp2.length() != 0) {
 							temp3 = join.joinRow(parseSelect.schema, createTable.allTable, fromTable.get(2), temp2, scanners.get(2).scanFile(), joinTable.get(1), false, updateSchema2);
+//							System.out.println(temp3);
 							parseSelect.schema = join.getNewSchema();
 							updateSchema2 = false;
 						}
 						if (temp3.length() != 0) {
+//							System.out.println(parseSelect.schema);
 							processAfterJoin(temp3, whereCondition, havingCondition, groupByTable, orderByTable, fromTable, projectTable, distinctTable, subQueryTable);
 						}
 					}				
@@ -127,6 +138,7 @@ public class processPlainSelect {
 				}
 			}
 		}
+		processWholeTable(havingCondition, groupByTable, orderByTable, fromTable, projectTable, distinctTable, subQueryTable);
 			
 			
 //			if (joinTable != null && !joinTable.isEmpty()) {
@@ -207,12 +219,12 @@ public class processPlainSelect {
 				String[] whereS = s.split(" ");
 				if (whereS.length == 2 && whereS[1].equals("in")) {
 					// InSelect(HashMap<String, HashMap<String, String>> schema, StringBuilder row, String query, ArrayList<StringBuilder> result)
-					temp2 = select.InSelect(parseSelect.schema, temp, s, parseSelect.subRes);
+					temp2 = select.InSelect(parseSelect.schema, temp, s, parseSelect.subRes, fromTable);
 				} else {
-					temp2 = select.selectRow(parseSelect.schema, temp, s);
+					temp2 = select.selectRow(parseSelect.schema, temp, s, fromTable);
 				}
 				// not meet the select requirement
-				if (temp2 == null) {
+				if (temp2 == null || temp2.length() == 0) {
 					break;
 				}
 			}
@@ -220,13 +232,13 @@ public class processPlainSelect {
 
 
 		/* group by */
-		if (groupByTable != null && groupByTable.get(0) != null) {
+		if (groupByTable != null && groupByTable.get(0) != null && temp2.length() != 0) {
 			groupByFlag = true;
 			result = group.groupBy(result, parseSelect.schema, temp2, groupByTable.get(0), fromTable);
 		}
 
 		/* order by */
-		if (groupByTable != null && orderByTable.get(0) != null) {
+		if (orderByTable != null && orderByTable.get(0) != null) {
 			if (groupByFlag) {
 				// orderBy2(ArrayList<StringBuilder> result, HashMap<String, HashMap<String, String>> scheme,String query,StringBuilder singleRecord )
 				result = order.orderBy(parseSelect.schema, result, temp2, orderByTable.get(0), groupByTable.get(0), fromTable);
@@ -236,7 +248,8 @@ public class processPlainSelect {
 				result = order.orderBy(parseSelect.schema, result, temp2, orderByTable.get(0), groupByTable.get(0), fromTable);
 			}		
 		}
-		/* projection */
+		
+		/* projection if there is no group by */
 		if (!groupByFlag) {
 			query = projectTable.toString().substring(1, projectTable.toString().length() - 1);
 			if (distinctTable != null) {
@@ -245,22 +258,28 @@ public class processPlainSelect {
 				result = projection.proTable(result, parseSelect.schema, temp2, query, false, fromTable);
 			}
 		}
+	}
+	
+	public static void processWholeTable(ArrayList<String> havingCondition, 
+			ArrayList<String> groupByTable, ArrayList<String> orderByTable, ArrayList<String> fromTable,
+			ArrayList<String> projectTable, ArrayList<String> distinctTable, ArrayList<SelectBody> subQueryTable) {
 
 		/* having */
 		if (!havingCondition.isEmpty()) {
+
 			// havingSelect(HashMap<String, HashMap<String, String>> schema, ArrayList<StringBuilder> result, String aggQuery, String groupQuery)
 			having.havingSelect(parseSelect.schema, result, havingCondition.get(0).toString().toLowerCase(), groupByTable.get(0), fromTable);
 		}
 		
 		/* orderby */
-		if (!havingCondition.isEmpty()) {
+		if (orderByTable != null && orderByTable.get(0) != null) {
 			// havingSelect(HashMap<String, HashMap<String, String>> schema, ArrayList<StringBuilder> result, String aggQuery, String groupQuery)
-			result = projection.proTable(result, parseSelect.schema, orderByTable.get(0), false, fromTable);
+			result = order.orderBy(parseSelect.schema, result, orderByTable.get(0), fromTable);
 		}
 		
-
 		/* projection if there has group by */
-		if (groupByFlag) {
+		if (groupByTable.get(0).length() != 0) {
+			String query;
 			query = projectTable.toString().substring(1, projectTable.toString().length() - 1);
 			if (distinctTable != null) {
 				result = projection.proTable(result, parseSelect.schema, query, true, fromTable);
