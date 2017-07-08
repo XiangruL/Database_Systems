@@ -12,7 +12,6 @@ public class tool {
 		//get the column information
 		HashMap<String, String> tableMap1 = schema.get(tableName);
 		int colNum = -1;
-
 	
 		//check if table contain this colName
 		//get the column number

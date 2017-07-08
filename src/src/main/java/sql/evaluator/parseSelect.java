@@ -36,6 +36,8 @@ import net.sf.jsqlparser.statement.select.PlainSelect;
 public class parseSelect {
 	
 	protected static HashMap<String, String> aliasNameMap = new HashMap<String, String>();
+	protected static HashMap<String, String> subAliasNameMap = new HashMap<String, String>();
+
 	protected static HashMap<String, HashMap<String, String>>  schema = createTable.allTable;
 	/* containing join condition, "table1.PID = table2.ID" */
 	protected static ArrayList<String> joinTable;
@@ -79,7 +81,7 @@ public class parseSelect {
 		List<SelectItem> selectItemList =  ((PlainSelect) selectBd).getSelectItems();
 		/* group by list */
 		List<Expression> groupByItemList = ((PlainSelect) selectBd).getGroupByColumnReferences();
-		/* order by list */
+//		/* order by list */
 		List<OrderByElement> orderByItemList = ((PlainSelect) selectBd).getOrderByElements();
 		/* where conditions */
 		Expression whereEx = ((PlainSelect) selectBd).getWhere();
@@ -92,7 +94,9 @@ public class parseSelect {
 
 		List<Expression> whereList = new ArrayList<Expression>();
 	
-
+		
+		HashMap<String, String> mainAliasNameMap = new HashMap<String, String>();
+		HashMap<String, String> subAliasNameMap = new HashMap<String, String>();
 		ArrayList<String> subSelectTable = new ArrayList<String>();
 		ArrayList<String> subJoinTable = new ArrayList<String>();
 		ArrayList<Expression> subCondition = new ArrayList<Expression>();
@@ -113,6 +117,11 @@ public class parseSelect {
 			aliasFlag = true;
 			String temp = fromItem.toString().toLowerCase();
 			aliasNameMap.put((temp.split("\\s+"))[1], (temp.split("\\s+"))[0]);
+			if (!subQueryFlag) {
+				mainAliasNameMap.put((temp.split("\\s+"))[1], (temp.split("\\s+"))[0]);
+			} else {
+				subAliasNameMap.put((temp.split("\\s+"))[1], (temp.split("\\s+"))[0]);
+			}			
 		} else {
 			// no alias, change it to lower case and put it into from 
 			if (!subQueryFlag) {
@@ -135,19 +144,26 @@ public class parseSelect {
 				if ((o.toString().split("\\s+")).length > 1) {
 					String temp = o.toString().toLowerCase();
 					aliasNameMap.put((temp.split("\\s+"))[1], (temp.split("\\s+"))[0]);
+					if (!subQueryFlag) {
+						mainAliasNameMap.put((temp.split("\\s+"))[1], (temp.split("\\s+"))[0]);
+					} else {
+						subAliasNameMap.put((temp.split("\\s+"))[1], (temp.split("\\s+"))[0]);
+					}
 				}
 			}
 		}
 		
 		
 		/** after having all names and alias print all from item **/
-		for (String st : aliasNameMap.keySet()) {
-			if (!subQueryFlag) {
+		if (!subQueryFlag) {
+			for (String st : aliasNameMap.keySet()) {
 				fromTable.add(aliasNameMap.get(st));
-			} else {
+			}
+		} else {
+			for (String st : subAliasNameMap.keySet()) {
 				subFromTable.add(aliasNameMap.get(st));
 			}
-		}
+		}		
 		from.append(fromTable.toString().substring(1, fromTable.toString().length() - 1));
 		from.append("\n");
 
@@ -287,10 +303,15 @@ public class parseSelect {
 				}
 			}
 		}
-		for (Expression e : condition) {
-			if (!subQueryFlag) {
+			
+		if (!subQueryFlag) {
+			for (Expression e : condition) {
+
 				whereCondition.add(parseWhereCondition(e));
-			} else {
+			}
+		} else {
+			for (Expression e : subCondition) {
+
 				subWhereCondition.add(parseWhereCondition(e));
 			}
 		}
@@ -395,24 +416,17 @@ public class parseSelect {
 				parseSubQuery(subQueryTable.get(0));
 			}
 			else {
-				// no nested query, just go through slipting and processing
-
-//				printOutResult.printQueryResult(res);
-//				System.out.println("");
-				
-//				printOutResult.printOutFinalResult(result);
-								
-//				System.out.println("");
-//				System.out.println("");
-				return processPlainSelect.algebraGen(parseSelect.joinTable, parseSelect.whereCondition, parseSelect.havingCondition, parseSelect.groupByTable, parseSelect.orderByTable, parseSelect.fromTable, parseSelect.projectTable, parseSelect.distinctTable, subQueryTable);
-				
-
-				
+				return processPlainSelect.algebraGen(parseSelect.joinTable, parseSelect.whereCondition, parseSelect.havingCondition, parseSelect.groupByTable, parseSelect.orderByTable, parseSelect.fromTable, parseSelect.projectTable, parseSelect.distinctTable, subRes);		
 			}
 		} else {
-//			printOutResult.printQueryResult(res);
-			return processPlainSelect.algebraGen(subJoinTable, subWhereCondition, subHavingCondition, subGroupByTable, subOrderByTable, subFromTable, subProjectTable, subDistinctTable, subQueryTable);
-//			printOutResult.printQueryResult(subRes);
+//			System.out.println(subWhereCondition);
+//			System.out.println(subFromTable);
+//			System.out.println(subWhereCondition);
+//			System.out.println(subHavingCondition);
+//			System.out.println(subGroupByTable);
+			
+			subRes =  processPlainSelect.algebraGen(subJoinTable, subWhereCondition, subHavingCondition, subGroupByTable, subOrderByTable, subFromTable, subProjectTable, subDistinctTable, subRes);
+			subRes = processPlainSelect.algebraGen(parseSelect.joinTable, parseSelect.whereCondition, parseSelect.havingCondition, parseSelect.groupByTable, parseSelect.orderByTable, parseSelect.fromTable, parseSelect.projectTable, parseSelect.distinctTable, subRes);		
 		}
 //		res.append(condition.toString());
 //		res.append(distinctTable);
@@ -428,7 +442,7 @@ public class parseSelect {
 	}
 	
 	public static void parseSubQuery(SelectBody selectBd) {
-//		splitStatement(selectBd, true);
+		splitStatement(selectBd, true);
 	}
 	
 	public static StringBuilder aliasToName(Object o, StringBuilder s) {

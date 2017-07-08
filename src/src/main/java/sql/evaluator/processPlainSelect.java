@@ -13,7 +13,7 @@ public class processPlainSelect {
 	public static ArrayList<StringBuilder> algebraGen(
 			ArrayList<String> joinTable, ArrayList<String> whereCondition, ArrayList<String> havingCondition, 
 			ArrayList<String> groupByTable, ArrayList<String> orderByTable, ArrayList<String> fromTable,
-			ArrayList<String> projectTable, ArrayList<String> distinctTable, ArrayList<SelectBody> subQueryTable) {
+			ArrayList<String> projectTable, ArrayList<String> distinctTable, ArrayList<StringBuilder> subRes) {
 		// control it's the first time to enter the join loop to scan a line
 		boolean startFlag = true;
 		// control to stop the outer loop or not
@@ -31,11 +31,12 @@ public class processPlainSelect {
 			scan current = new scan(s);
 			scanners.add(current);
 		}
-		stopFlag = scanners.get(0).isFlag();
-		boolean[] flagSet = new boolean[fromTable.size() - 1];
-		StringBuilder[] rowSet = new StringBuilder[fromTable.size() - 1];
-		HashMap[] schemaSet = new HashMap[fromTable.size() - 1];
+//		stopFlag = scanners.get(0).isFlag();
 		parseSelect.schema = createTable.allTable;
+
+//		boolean[] flagSet = new boolean[fromTable.size() - 1];
+//		StringBuilder[] rowSet = new StringBuilder[fromTable.size() - 1];
+//		HashMap[] schemaSet = new HashMap[fromTable.size() - 1];
 		
 //		while (!stopFlag) {
 //			parseSelect.schema = createTable.allTable;
@@ -47,7 +48,7 @@ public class processPlainSelect {
 		if (joinTable.size() == 0) {
 			for (int i = 0; i < scanners.get(0).getTotalLineNum(); i++) {
 				StringBuilder temp = scanners.get(0).scanFile();
-				processAfterJoin(temp, whereCondition, havingCondition, groupByTable, orderByTable, fromTable, projectTable, distinctTable, subQueryTable);
+				processAfterJoin(temp, whereCondition, havingCondition, groupByTable, orderByTable, fromTable, projectTable, distinctTable, subRes);
 			}
 		}
 
@@ -66,7 +67,7 @@ public class processPlainSelect {
 					updateSchema = false;
 					if (temp2.length() != 0) {
 //						System.out.println(parseSelect.schema);
-						processAfterJoin(temp2, whereCondition, havingCondition, groupByTable, orderByTable, fromTable, projectTable, distinctTable, subQueryTable);
+						processAfterJoin(temp2, whereCondition, havingCondition, groupByTable, orderByTable, fromTable, projectTable, distinctTable, subRes);
 					}
 				}
 			}
@@ -95,7 +96,7 @@ public class processPlainSelect {
 						}
 						if (temp3.length() != 0) {
 //							System.out.println(parseSelect.schema);
-							processAfterJoin(temp3, whereCondition, havingCondition, groupByTable, orderByTable, fromTable, projectTable, distinctTable, subQueryTable);
+							processAfterJoin(temp3, whereCondition, havingCondition, groupByTable, orderByTable, fromTable, projectTable, distinctTable, subRes);
 						}
 					}				
 				}
@@ -131,14 +132,17 @@ public class processPlainSelect {
 								updateSchema3 = false;
 							}
 							if (temp4.length() != 0) {
-								processAfterJoin(temp4, whereCondition, havingCondition, groupByTable, orderByTable, fromTable, projectTable, distinctTable, subQueryTable);
+								processAfterJoin(temp4, whereCondition, havingCondition, groupByTable, orderByTable, fromTable, projectTable, distinctTable, subRes);
 							}
 						}
 					}				
 				}
 			}
 		}
-		processWholeTable(havingCondition, groupByTable, orderByTable, fromTable, projectTable, distinctTable, subQueryTable);
+//		System.out.println(result);
+
+		
+			processWholeTable(havingCondition, groupByTable, orderByTable, fromTable, projectTable, distinctTable, subRes);
 			
 			
 //			if (joinTable != null && !joinTable.isEmpty()) {
@@ -206,20 +210,18 @@ public class processPlainSelect {
 	
 	public static void processAfterJoin(StringBuilder temp, ArrayList<String> whereCondition, ArrayList<String> havingCondition, 
 			ArrayList<String> groupByTable, ArrayList<String> orderByTable, ArrayList<String> fromTable,
-			ArrayList<String> projectTable, ArrayList<String> distinctTable, ArrayList<SelectBody> subQueryTable) {
+			ArrayList<String> projectTable, ArrayList<String> distinctTable, ArrayList<StringBuilder> subRes) {
 		StringBuilder temp2 = temp;
 		boolean groupByFlag = false;
 		boolean orderByFlag = false;
 		String query = "";
-
-
 		/* where condition */
 		if (whereCondition.size() != 0) {
 			for (String s : whereCondition) {
 				String[] whereS = s.split(" ");
 				if (whereS.length == 2 && whereS[1].equals("in")) {
 					// InSelect(HashMap<String, HashMap<String, String>> schema, StringBuilder row, String query, ArrayList<StringBuilder> result)
-					temp2 = select.InSelect(parseSelect.schema, temp, s, parseSelect.subRes, fromTable);
+					temp2 = select.InSelect(parseSelect.schema, temp, s, subRes, fromTable);
 				} else {
 					temp2 = select.selectRow(parseSelect.schema, temp, s, fromTable);
 				}
@@ -229,13 +231,14 @@ public class processPlainSelect {
 				}
 			}
 		}	
-
+		
 
 		/* group by */
 		if (groupByTable != null && groupByTable.get(0) != null && temp2.length() != 0) {
 			groupByFlag = true;
 			result = group.groupBy(result, parseSelect.schema, temp2, groupByTable.get(0), fromTable);
 		}
+		
 
 		/* order by */
 		if (orderByTable != null && orderByTable.get(0) != null) {
@@ -245,6 +248,7 @@ public class processPlainSelect {
 
 			} else {
 				// orderBy(HashMap<String, HashMap<String, String>> schema, ArrayList<StringBuilder> result, String orderQuery,StringBuilder row )
+				
 				result = order.orderBy(parseSelect.schema, result, temp2, orderByTable.get(0), groupByTable.get(0), fromTable);
 			}		
 		}
@@ -253,20 +257,19 @@ public class processPlainSelect {
 		if (!groupByFlag) {
 			query = projectTable.toString().substring(1, projectTable.toString().length() - 1);
 			if (distinctTable != null) {
-				result = projection.proTable(result, parseSelect.schema, temp2, query, true, fromTable);
+				projection.proTable(result, parseSelect.schema, temp2, query, true, fromTable);
 			} else {
-				result = projection.proTable(result, parseSelect.schema, temp2, query, false, fromTable);
+				projection.proTable(result, parseSelect.schema, temp2, query, false, fromTable);
 			}
 		}
 	}
 	
 	public static void processWholeTable(ArrayList<String> havingCondition, 
 			ArrayList<String> groupByTable, ArrayList<String> orderByTable, ArrayList<String> fromTable,
-			ArrayList<String> projectTable, ArrayList<String> distinctTable, ArrayList<SelectBody> subQueryTable) {
+			ArrayList<String> projectTable, ArrayList<String> distinctTable, ArrayList<StringBuilder> subRes) {
 
 		/* having */
 		if (!havingCondition.isEmpty()) {
-
 			// havingSelect(HashMap<String, HashMap<String, String>> schema, ArrayList<StringBuilder> result, String aggQuery, String groupQuery)
 			having.havingSelect(parseSelect.schema, result, havingCondition.get(0).toString().toLowerCase(), groupByTable.get(0), fromTable);
 		}
@@ -278,7 +281,7 @@ public class processPlainSelect {
 		}
 		
 		/* projection if there has group by */
-		if (groupByTable.get(0).length() != 0) {
+		if (groupByTable.get(0) != null) {
 			String query;
 			query = projectTable.toString().substring(1, projectTable.toString().length() - 1);
 			if (distinctTable != null) {

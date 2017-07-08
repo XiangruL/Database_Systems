@@ -37,7 +37,7 @@ public class parseStatement {
 			ArrayList<StringBuilder> tempRes = parseSelect.splitStatement(selectBd, false);
 			printOutResult.printQueryResult(parseSelect.res);
 			System.out.println("");
-			printOutResult.printOutFinalResult(tempRes);
+			printOutResult.printOutFinalResult(parseSelect.subRes);
 		}
 
 		

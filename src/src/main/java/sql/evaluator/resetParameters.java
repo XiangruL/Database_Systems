@@ -10,6 +10,7 @@ public class resetParameters {
 	
 	public static void resetAll() {
 		parseSelect.aliasNameMap = new HashMap<String, String>();
+		parseSelect.subAliasNameMap = new HashMap<String, String>();
 		parseSelect.schema = createTable.allTable;
 		parseSelect.joinTable = new ArrayList<String>();
 		parseSelect.condition = new ArrayList<Expression>();
