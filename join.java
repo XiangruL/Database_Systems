@@ -9,7 +9,7 @@ public class join {
 	static int index = 0;
 	
 	public static StringBuilder joinRow(HashMap<String, HashMap<String, String>> schema,
-			HashMap<String, HashMap<String, String>> oldSchema,
+			HashMap<String, HashMap<String, String>> oldSchema, String tableName,
 			StringBuilder row1, StringBuilder row2, String query, boolean flag, boolean updatFlag){
 		
 		StringBuilder row = new StringBuilder();
@@ -25,15 +25,20 @@ public class join {
 			String[] tcName2 = qstr[2].split("\\.");
 			
 			String tableName1 = tcName1[0];
-			String tableName2 = tcName2[0];
+			String tableName2;
+			if(tableName == null){
+				tableName2 = tcName2[0];
+			}else{
+				tableName2 = tableName;
+			}
 			
 			String colName1 = tcName1[1];
 			String colName2 = tcName2[1];
-			
+		
 			int colNum1 = tool.getColNum(schema, tableName1, colName1);
 			int colNum2 = tool.getColNum(oldSchema, tableName2, colName2);
-					
-			if(rowString1[colNum1].equals(rowString2[colNum2])){
+			
+			if(rowString1[colNum1].equals(rowString2[colNum2])&&!(rowString1[colNum1].equalsIgnoreCase("null"))){
 			
 				for (int i = 0; i < rowString2.length; i++) {
 					if(i!=colNum2){
@@ -84,12 +89,9 @@ public class join {
 		int colNum;
 		
 		//find the total number of columns of first table
-		int countZ = index;
-		int count = countZ;
+		int countZ = index+1;
 		int joinColNum = tool.getColNum(oldSchema, tableName2, colName2);
-		if(joinColNum != 0){
-			countZ++;
-		}
+		
 				
 	    while (it.hasNext()) {
 	        Map.Entry pair = (Map.Entry)it.next();
@@ -105,10 +107,10 @@ public class join {
 	        
 	        colName = (String)pair.getKey();
 	        colNum = tool.getColNum(oldSchema, tableName2, colName);
-	        if(colNum ==0){
-	        	colNum +=countZ;
+	        if(joinColNum < colNum){
+	        	colNum+=countZ-1;
 	        }else{
-	        	colNum += count;
+	        	colNum += countZ;
 	        }
 	        temp = (String) pair.getValue();
 	        str = temp.split(",");
@@ -132,11 +134,9 @@ public class join {
 		//find the total number of columns of first table
 		int countZ = oldSchema.get(tableName1).size()-1;
 		index = countZ;
-		int count = countZ;
 		int joinColNum = tool.getColNum(oldSchema, tableName2, colName2);
-		if(joinColNum != 0){
-			countZ++;
-		}
+		countZ++;
+
 		//assign index for the second table column
 		String temp = "";
 		String[] str;
@@ -166,10 +166,10 @@ public class join {
 	        
 	        colName = (String)pair.getKey();
 	        colNum = tool.getColNum(oldSchema, tableName2, colName);
-	        if(colNum ==0){
-	        	colNum +=countZ;
+	        if(joinColNum < colNum){
+	        	colNum+=countZ-1;
 	        }else{
-	        	colNum += count;
+	        	colNum += countZ;
 	        }
 	        temp = (String) pair.getValue();
 	        str = temp.split(",");
@@ -179,6 +179,7 @@ public class join {
 	        index++;
 	    }
 	    newSchema.put(tableName2, colHashMap2);
+	   
 	}
 
 	public static HashMap<String, HashMap<String, String>> getNewSchema() {
