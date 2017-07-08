@@ -7,32 +7,24 @@ public class group {
 	
 	public static ArrayList<StringBuilder> groupBy(ArrayList<StringBuilder> result,
 			HashMap<String, HashMap<String, String>> schema, StringBuilder row,
-			String query){
+			String query, ArrayList<String> tableNames){
 		
-		if(row.length()>0){		
+		if(row.length()>0){
 			//if the result contains data
 			if(result.size()>0){
-				
 				//get table name
 				//check if contains table name
-				
 				String tableName;
 				String colName;
-				if(query.contains(".")){
-					String[] qstr = query.split("\\.");
-					tableName = qstr[0];
-					colName = qstr[1];
-				}else{
-					
-					ArrayList<String> tName = parseSelect.getFromTable();
-					if(tName.size()!=1){
-						System.err.println("do not specify table name");
-						return result;
-					}
-					tableName = tName.get(0);
+				if(tableNames.size() == 1){
+					tableName = tableNames.get(0);
 					colName = query;
-					
+				}else{
+					String[] gqstr = query.split("\\.");
+					tableName = gqstr[0];
+					colName = gqstr[1];
 				}
+				
 			
 				//get column number
 				int ColNum = tool.getColNum(schema, tableName, colName);
@@ -47,7 +39,6 @@ public class group {
 					if(comRow[ColNum].equals(resultRow[ColNum])){
 						count++;
 					}
-
 					//if the given row does not equal to the result data
 					//two condition:
 					//1.it equals the former row of the result data
@@ -57,6 +48,7 @@ public class group {
 						//if count>0, it equals the former line of the result data
 						if(count>0){
 							result.add(i, row);
+							
 							return result;
 						}
 					}
@@ -71,6 +63,7 @@ public class group {
 				}
 			}else{//if the array list doesn't contain data, add the given row directly
 				result.add(row);
+				
 			}
 		}
 		

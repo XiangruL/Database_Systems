@@ -12,19 +12,25 @@ public class scan {
 	private int totalLineNum;
 	private boolean flag = false;
 	private String tableName;
+	private StringBuilder l;
+	private String line;
 
+	
 	public scan(String tableName) {
 		totalLineNum = getFileLine(tableName);
 		this.tableName = tableName;
 	}
 	
 	public StringBuilder scanFile(){
-		String path = parserTest.path;
-		flag = false;
+		String path = main.path;
+		
 		StringBuilder sb = new StringBuilder();
-		String line = "";
+		if(flag){
+			return sb;
+		}
+		//String line = "";
 		int count = 0;
-		File file = new File(path+tableName+".csv");
+		File file = new File(path + tableName+".csv");
 		try {
 			FileInputStream fis = new FileInputStream(file);
 			BufferedReader br = new BufferedReader(new InputStreamReader(fis));
@@ -34,17 +40,17 @@ public class scan {
 				
 				if(count==lineNum){
 					sb.append(line);
+					break;
 				}
+				
 			}
 			lineNum++;
 			
 			if((lineNum - totalLineNum) ==1){
-				
 				flag = true;
 				fis.getChannel().position(0);
 				lineNum = 1;
-			}
-			
+			}	
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -54,7 +60,7 @@ public class scan {
 		}
 		
 		
-		
+		l = sb;
 		return sb;
 	}
 	
@@ -106,6 +112,9 @@ public class scan {
 		return tableName;
 	}
 
+	public StringBuilder getLine() {
+		return l;
+	}	
 	
 	
 	

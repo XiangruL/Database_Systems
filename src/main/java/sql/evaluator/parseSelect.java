@@ -37,7 +37,6 @@ public class parseSelect {
 	
 	protected static HashMap<String, String> aliasNameMap = new HashMap<String, String>();
 	protected static HashMap<String, HashMap<String, String>>  schema = createTable.allTable;
-	protected static final Logger LOGGER = Logger.getLogger( parserTest.class.getName() );
 	/* containing join condition, "table1.PID = table2.ID" */
 	protected static ArrayList<String> joinTable;
 	protected static ArrayList<Expression> condition;
@@ -721,7 +720,7 @@ public class parseSelect {
 			// table2 does not reach the bottom
 			while(!scanner2.isFlag()) {
 				StringBuilder temp2 = new StringBuilder();
-				temp2 = join.joinRow(oldschema, createTable.allTable, null,temp, scanner2.scanFile(), query, joinF, updateSchema);
+				temp2 = join.joinRow(oldschema, createTable.allTable, null, scanner1.getLine(), scanner2.scanFile(), query, joinF, updateSchema);
 				updateSchema = false;
 				if (temp2 != null && temp2.length() > 0) {
 					parseSelect.schema = join.getNewSchema();
@@ -769,14 +768,26 @@ public class parseSelect {
 		ArrayList<String> newJoinTable = new ArrayList<String>();
 		HashSet<String> tableName = new HashSet<String>(); 
 		for (String s : joinT) {
+			StringBuilder temp = new StringBuilder();
 			String[] s1 = s.split(" = ");
 			String[] itm1 = s1[0].split("\\.");
 			String[] itm2 = s1[1].split("\\.");
 			// if at least one table showed before, put this condition in the join table 
 			if (tableName.size() == 0 || tableName.contains(itm1[0]) || tableName.contains(itm2[0])) {
+				if (tableName.contains(itm1[0])) {
+					temp.append(s1[0]);
+					temp.append(" = ");
+					temp.append(s1[1]);
+				} else if (tableName.contains(itm2[0])) {
+					temp.append(s1[1]);
+					temp.append(" = ");
+					temp.append(s1[0]);
+				} else {
+					temp.append(s);
+				}
 				tableName.add(itm1[0]);
 				tableName.add(itm2[0]);
-				newJoinTable.add(s);
+				newJoinTable.add(temp.toString());
 			} else {
 				joinT.add(s);
 			}

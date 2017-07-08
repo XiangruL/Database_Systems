@@ -13,21 +13,21 @@ import net.sf.jsqlparser.statement.select.*;
 import net.sf.jsqlparser.statement.create.table.*;
 
 
-public class parserTest {
-	private static final Logger LOGGER = Logger.getLogger( parserTest.class.getName() );
+public class main {
+	// private static final Logger LOGGER = Logger.getLogger( parserTest.class.getName() );
 	protected static String path;
-	
+
 	public static void main(String[] args) {
-		
+
 		int i;
 		File dataDir = null;
 		ArrayList<File> sqlFiles = new ArrayList<File>();
-		
+
 		for(i = 0; i < args.length; i++) {
 			sqlFiles.add(new File(args[i] + "schema.sql"));
 			path = args[i];
 		}
-	
+
 		for (File sql : sqlFiles) {
 			try {
 				FileReader stream = new FileReader(sql);
@@ -43,25 +43,25 @@ public class parserTest {
 						CreateTable ct = (CreateTable)stmt;
 						createTable.processSQL(ct);
 
-						//	LOGGER.log(Level.SEVERE, "Table name is " + ct.getTable().getName());
+						// LOGGER.log(Level.SEVERE, "Table name is " + ct.getTable().getName());
 					}
 				}
-//				LOGGER.log(Level.SEVERE, "LINE: " + createTable.allTable.get("publicationType").get("pubTypeID"));
-//				LOGGER.log(Level.SEVERE, "LINE: " + createTable.allTable.get("publicationType").get("pubTypeID"));
-//
-//				LOGGER.log(Level.SEVERE, "LINE: " + createTable.allTable.get("venue").get("vName"));
-//				LOGGER.log(Level.SEVERE, "LINE: " + createTable.allTable.get("author").get("firstName"));
-//				LOGGER.log(Level.SEVERE, "LINE: " + createTable.allTable.get("authorship").get("lastName"));
-//				LOGGER.log(Level.SEVERE, "LINE: " + createTable.allTable.get("authorship").get("instituteID"));
+				//    LOGGER.log(Level.SEVERE, "LINE: " + createTable.allTable.get("publicationType").get("pubTypeID"));
+				//    LOGGER.log(Level.SEVERE, "LINE: " + createTable.allTable.get("publicationType").get("pubTypeID"));
+				//
+				//    LOGGER.log(Level.SEVERE, "LINE: " + createTable.allTable.get("venue").get("vName"));
+				//    LOGGER.log(Level.SEVERE, "LINE: " + createTable.allTable.get("author").get("firstName"));
+				//    LOGGER.log(Level.SEVERE, "LINE: " + createTable.allTable.get("authorship").get("lastName"));
+				//    LOGGER.log(Level.SEVERE, "LINE: " + createTable.allTable.get("authorship").get("instituteID"));
 			} catch (IOException e) {
 				e.printStackTrace();
 			} catch (ParseException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-				
+
 		}
 	}
-	
-	
+
+
 }

@@ -25,7 +25,7 @@ public class distinct {
 	
 	//distinct before projection with result table
 	public static ArrayList<StringBuilder> dist(ArrayList<StringBuilder> result,
-			HashMap<String, HashMap<String, String>> schema, String query){
+			HashMap<String, HashMap<String, String>> schema, String query,ArrayList<String> tableNames){
 		
 		Map<Integer, String> map = new HashMap<Integer, String>();
 		String row;
@@ -34,19 +34,15 @@ public class distinct {
 		String colName;
 		int colNum;
 		
-		if(qstr[0].contains(".")){
-			String[] tcName = qstr[0].split("\\.");
-			tableName = tcName[0];
-			colName = tcName[1];
+		if(tableNames.size() == 1){
+			tableName = tableNames.get(0);
+			colName = query;
 		}else{
-			ArrayList<String> tName = parseSelect.getFromTable();
-			if(tName.size()!=1){
-				System.err.println("do not specify table name");
-				return result;
-			}
-			tableName = tName.get(0);
-			colName = qstr[0];
+			String[] gqstr = query.split("\\.");
+			tableName = gqstr[0];
+			colName = gqstr[1];
 		}
+		
 		colNum = tool.getColNum(schema, tableName, colName);
 		
 		
@@ -66,7 +62,8 @@ public class distinct {
 	//if the given row is already in the result table
 	//empty row and return it
 	public static StringBuilder dist(ArrayList<StringBuilder> result,
-			HashMap<String, HashMap<String, String>> schema, StringBuilder row, String query){
+			HashMap<String, HashMap<String, String>> schema, StringBuilder row, String query,
+			ArrayList<String> tableNames){
 		if(row.length() > 0){
 			Map<Integer, String> map = new HashMap<Integer, String>();
 			String rowTemp;
@@ -75,18 +72,13 @@ public class distinct {
 			String colName;
 			int colNum;
 			
-			if(qstr[0].contains(".")){
-				String[] tcName = qstr[0].split("\\.");
-				tableName = tcName[0];
-				colName = tcName[1];
+			if(tableNames.size() == 1){
+				tableName = tableNames.get(0);
+				colName = query;
 			}else{
-				ArrayList<String> tName = parseSelect.getFromTable();
-				if(tName.size()!=1){
-					System.err.println("do not specify table name");
-					return row;
-				}
-				tableName = tName.get(0);
-				colName = qstr[0];
+				String[] gqstr = query.split("\\.");
+				tableName = gqstr[0];
+				colName = gqstr[1];
 			}
 			colNum = tool.getColNum(schema, tableName, colName);
 			for (int i = 0; i < result.size(); i++) {
