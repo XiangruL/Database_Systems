@@ -6,62 +6,61 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.RandomAccessFile;
 
 public class scan {
-	private int lineNum = 1;
+	private int lineNum = 0;
 	private int totalLineNum;
 	private boolean flag = false;
 	private String tableName;
 	private String line = "";
-	
+	private long chars=0;//chars指的是字符数 
 	public scan(String tableName) {
 		totalLineNum = getFileLine(tableName);
 		this.tableName = tableName;
 	}
-	
-	public StringBuilder scanFile(){
-		String path = parserTest.path;
+
+public StringBuilder scanFile(){
 		
 		StringBuilder sb = new StringBuilder();
 		if(flag){
 			return sb;
 		}
-		//String line = "";
-		int count = 0;
-		File file = new File(path + tableName+".csv");
-		try {
-			FileInputStream fis = new FileInputStream(file);
-			BufferedReader br = new BufferedReader(new InputStreamReader(fis));
-			while((line=br.readLine())!=null){
-				
-				count++;
-				
-				if(count==lineNum){
-					sb.append(line);
-					break;
-				}
-				
-			}
-			lineNum++;
-			
-			if((lineNum - totalLineNum) ==1){
+		
+		String fileName = tableName+".csv";
+        File file = new File(fileName);  
+          
+        RandomAccessFile rf = null;  
+          
+        String tempString = null;  
+        
+        try {
+			rf = new RandomAccessFile(fileName, "r");
+	        rf.seek(chars);   
+	        
+	        tempString = rf.readLine();
+	        sb.append(tempString);
+
+	        chars = rf.getFilePointer(); 
+	        lineNum++;
+	        if((lineNum - totalLineNum) ==0){
 				flag = true;
-				fis.getChannel().position(0);
-				lineNum = 1;
-			}	
+				chars = 0;
+				lineNum = 0;
+			}
+	        
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}
-		
-		
-		
+		}  
+          
+        
 		return sb;
 	}
-	
+
 	public int getFileLine(String tableName){
 		File file = new File(tableName+".csv");
 		String line = "";
@@ -113,7 +112,5 @@ public class scan {
 	public StringBuilder getLine() {
 		return new StringBuilder(line);
 	}	
-	
-	
 	
 }
