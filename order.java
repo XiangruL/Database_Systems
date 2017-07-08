@@ -1,21 +1,12 @@
 package sql.evaluator;
 
-import java.sql.Date;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 
-import sql.evaluator.parseSelect;
-//score desc
-//score ASC
-//P.pubTypeID
-//P.pubTypeID desc
-//P.pubTypeID ASC
-//P.desc desc
-//P.ASC ASC
-
 public class order{
-
+	
+	//doing order by without group by
+	//receiving a row and insert it into the array list with the correct order
 	public static ArrayList<StringBuilder> orderBy(HashMap<String, HashMap<String, String>> schema,
 			ArrayList<StringBuilder> result, StringBuilder row, String orderQuery, 
 			ArrayList<String> tableNames){
@@ -85,6 +76,7 @@ public class order{
 		return result;
 }
 	
+	//order by with group by
 	public static ArrayList<StringBuilder> orderBy(HashMap<String, HashMap<String, String>> schema,
 			ArrayList<StringBuilder> result, StringBuilder row, String orderQuery, String groupQuery,
 			ArrayList<String> tableNames){
@@ -180,5 +172,61 @@ public class order{
 			}
 		}
 		return result;
+	}
+	
+	//order by the result set
+	public static ArrayList<StringBuilder> orderBy(HashMap<String, HashMap<String, String>> schema,
+			ArrayList<StringBuilder> result, String orderQuery, ArrayList<String> tableNames){
+		//parse the aggregation type to get the column number
+		String[] qstr = orderQuery.split("\\(");
+		int colNum = tool.getColNum(schema, "agg", qstr[0]);
+		String order = "";
+		if(orderQuery.contains("desc")){
+			order = "desc";
+		}else{
+			order = "asc";
+		}
+		
+		double num1;
+		double num2;
+		StringBuilder temp;
+		for (int i = 0; i < result.size(); i++) {
+			
+			if(order.equals("asc")){
+				for (int j = i; j >0; j--) {
+					num1 = Double.valueOf(result.get(j).toString().split("\\|")[colNum]);
+					num2 = Double.valueOf(result.get(j-1).toString().split("\\|")[colNum]);
+					
+					if(num1<num2){
+						temp = result.get(j);
+						result.add(j-1, result.get(j));
+						result.remove(j+1);
+						
+					}
+				}
+			}else{
+				for (int j = i; j >0; j--) {
+					num1 = Double.valueOf(result.get(j).toString().split("\\|")[colNum]);
+					num2 = Double.valueOf(result.get(j-1).toString().split("\\|")[colNum]);
+					
+					if(num1>num2){
+						temp = result.get(j);
+						result.add(j-1, result.get(j));
+						result.remove(j+1);
+						
+					}
+				}
+			}
+		}
+
+		return result;
+	}
+	
+	public static void swap(StringBuilder row1, StringBuilder row2){
+		StringBuilder temp = row1;
+		row1 = row2;
+		row2 = temp;
+		System.out.println("000"+row1);
+		System.out.println("000"+row2);
 	}
 }

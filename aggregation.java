@@ -72,11 +72,11 @@ public class aggregation {
 			break;
 	
 		case "min":
-			min(schema, operator, result, acolNum, gcolNum, type);
+			updateRS(schema, result, min(result, acolNum, gcolNum, type), operator);
 			break;
 	
 		case "max":
-			max(schema, operator, result, acolNum, gcolNum, type);
+			updateRS(schema, result, max(result, acolNum, gcolNum, type), operator);
 			break;
 
 		default:
@@ -120,11 +120,11 @@ public class aggregation {
 			break;
 	
 		case "min":
-			min(schema, operator, result, colNum, type);
+			updateRS(schema, operator, result, min(schema, result, colNum, type));
 			break;
 	
 		case "max":
-			max(schema, operator, result, colNum, type);
+			updateRS(schema, operator, result, max(schema, result, colNum, type));
 			break;
 
 		default:
@@ -196,36 +196,48 @@ public class aggregation {
 		return colNum;
 	}
 	
-	//return result after aggregation
+	//update result based on group after aggregation
+	//update schema
 	private static void updateRS(HashMap<String, HashMap<String, String>> schema,
 			ArrayList<StringBuilder> result,ArrayList<String> posCount,String operator){
 		//update result
 		int index = 0;
 		int begin = 0;
+		int count = 0;
 		String countResult;
+		
 		for (int i = 0; i < posCount.size(); i++) {
 			if(i == 0){
 				updateSchema(schema, operator, result.get(i).toString().split("\\|"));
 			}
-			index = Integer.valueOf(posCount.get(i).split(",")[0]);
-			countResult = posCount.get(i).split(",")[1];
 			
-			for (int j = begin; j <= index; j++) {
-				result.get(j).append("|"+ countResult);
+			index = Integer.valueOf(posCount.get(i).split(",")[0])-count;
+			countResult = posCount.get(i).split(",")[1];
+			result.get(begin).append("|"+ countResult);
+			begin++;
+			while(begin <= index){
+				result.remove(begin);
+				index--;
+				count++;
 				
 			}
 			begin = index+1;
 		}
+
 	}
 	
-	//update schema and result
+	//update result without group, just remain the frist row
+	//update schema
 	private static void updateRS(HashMap<String, HashMap<String, String>> schema,
 			String operator, ArrayList<StringBuilder> result, String aggResult){
 		for (int i = 0; i < result.size(); i++) {
 			if(i ==0){
 				updateSchema(schema, operator, result.get(i).toString().split("\\|"));
+				result.get(i).append("|"+aggResult);
+			}else{
+				result.remove(1);
 			}
-			result.get(i).append("|"+aggResult);
+			
 		}
 	}
 	
@@ -393,212 +405,132 @@ public class aggregation {
 	
 		
 	//max with group by
-	private static void max(HashMap<String, HashMap<String, String>> schema,
-			String operator, ArrayList<StringBuilder> result, int acolNum, int gcolNum, String type){
-		int oriLen2 = result.get(0).toString().split("\\|").length;
-		String [] firstRec1max = result.get(0).toString().split("\\|");
-		String record1max =firstRec1max[gcolNum] ;
-		String record111 = firstRec1max[acolNum] ;
-		String answer111 = firstRec1max[acolNum] + "|" + "0";
-		ArrayList<String> posCount1=  new ArrayList<String>();
-		String[] incomingRow;
-		for (int i = 0 ; i<result.size();i++){
-			incomingRow = result.get(i).toString().split("\\|");
-			if(i==0){
-				updateSchema(schema,operator,incomingRow);
-					
-			}
-			if (result.get(i).toString().split("\\|")[gcolNum].equals(record1max)){
-				if (incomingRow[acolNum].equals(record111)){
-					answer111 = answer111 + "|" + i; 
-				}
-				else if (tool.isLarge(type, incomingRow[acolNum], record111)){
-					record111 = incomingRow[acolNum];
-					answer111 = incomingRow[acolNum]+"|" +i ;
-				}
-			}
-			else{
-				int currentpos = i-1;
-				if (currentpos!= -1){
-					posCount1.add(answer111);
-				}
-				record111 = result.get(i).toString().split("\\|")[acolNum];
-				answer111 = result.get(i).toString().split("\\|")[acolNum]+ "|" + i;
-				record1max = result.get(i).toString().split("\\|")[gcolNum];
-			}
-			if (i==result.size()-1 ){
-				posCount1.add( answer111);
-			}
-		}
-
+	private static ArrayList<String> max(ArrayList<StringBuilder> result, 
+			int acolNum, int gcolNum, String type){
+		String max = "";
+		String gdataFlag = "";
+		String dataFlag = "";
+		String[] rowStrings;
+		//String is consisted like (the last position,max)
+		String posMaxString;
+		ArrayList<String> posMax = new ArrayList<>();
 		
-		for (int i =0; i< posCount1.size();i++){
-			String addb [] = posCount1.get(i).split("\\|");
-				for ( int j=1; j<2;j++){
-					StringBuilder mysb = new StringBuilder();
-					mysb.append("|" +addb[0]);
-					result.get(Integer.valueOf(addb[j])).append(mysb);
-				}
-				for ( int j=3; j<addb.length;j++){
-					StringBuilder mysb = new StringBuilder();
-					mysb.append("|" +addb[0]);
-					result.get(Integer.valueOf(addb[j])).append(mysb);
-				}
-	}
-		StringBuilder mynull2 = new StringBuilder();
-		mynull2.append("|"  +"null");
-		
-		for ( int i =0 ; i< result.size();i++){
-			String [] temp = result.get(i).toString().split("\\|");
-			if (temp.length==oriLen2){
-				result.get(i).append(mynull2);
-
+		for (int i = 0; i < result.size(); i++) {
+			rowStrings = result.get(i).toString().split("\\|");
+			dataFlag = rowStrings[acolNum];
+			
+			if(i == 0){
+				gdataFlag = rowStrings[gcolNum];
+				max = dataFlag;
 			}
+			
+			if(gdataFlag.equals(rowStrings[gcolNum])){
+				if(!dataFlag.equalsIgnoreCase("null")){
+					if(tool.isSmall(type, max, dataFlag)){
+						max = dataFlag;
+					}
+				}
+				if(i == result.size()-1){
+					posMaxString = i + "," + max;
+					posMax.add(posMaxString);
+				}
+			}else{
+				posMaxString = i-1 + "," + max;
+				posMax.add(posMaxString);
+				gdataFlag = rowStrings[gcolNum];
+				max = dataFlag;
+				if(i == result.size()-1){
+					posMaxString = i + "," + max;
+					posMax.add(posMaxString);
+				}
+				
+			}
+
 		}
+		return posMax;
 	}
 	
 	//max without group by
-	private static void max(HashMap<String, HashMap<String, String>> schema,
-			String operator, ArrayList<StringBuilder> result, int acolNum, String type){
-		int oriLen1 = result.get(0).toString().split("\\|").length;
-		String [] firstRec11 = result.get(0).toString().split("\\|");
-		String record11 =firstRec11[acolNum] ;
-		String answer11 = firstRec11[acolNum];
-		String[] incomingRow;
+	private static String max(HashMap<String, HashMap<String, String>> schema,
+			ArrayList<StringBuilder> result, int colNum, String type){
+		String max = "";
+		String[] resultRow;
+		String maxPos = "";
 		for (int i = 0 ; i<result.size();i++){
-			incomingRow = result.get(i).toString().split("\\|");
+			resultRow = result.get(i).toString().split("\\|");
 			if(i==0){
-				updateSchema(schema,operator,incomingRow);
-				
+				max = resultRow[colNum];
 			}
-			if (tool.isLarge(type, incomingRow[acolNum], record11)){
-				record11 = incomingRow[acolNum];				
-				answer11 = incomingRow[acolNum]+"|" +i ;
-			}else if (incomingRow[acolNum].equals(record11)){
-				answer11 = answer11 + "|" + i; 
-			}			
-		}
-		StringBuilder mysb1 = new StringBuilder();
-		mysb1.append("|"  +record11);
-		StringBuilder mynull1 = new StringBuilder();
-		mynull1.append("|"  +"null");
-		String[] addBack11 = answer11.split("\\|");
-		for (int i =1 ; i<addBack11.length;i++){
-			result.get(Integer.valueOf(addBack11[i])).append(mysb1);
-		}
-		for ( int i =0 ; i< result.size();i++){
-			String [] temp = result.get(i).toString().split("\\|");
-			if (temp.length==oriLen1){
-				result.get(i).append(mynull1);
+			if (tool.isSmall(type, max, resultRow[colNum])){
+				max = resultRow[colNum];
+				maxPos = max+"," +i ;
 			}
 		}
+		return maxPos;
 	}
 	
 	//min with group by
-	private static void min(HashMap<String, HashMap<String, String>> schema,
-			String operator, ArrayList<StringBuilder> result, int acolNum, int gcolNum, String type){
-		int oriLen = result.get(0).toString().split("\\|").length;
-		String [] firstRec1 = result.get(0).toString().split("\\|");
-		String record1 =firstRec1[gcolNum] ;
-		String record11 = firstRec1[acolNum] ;
-		String answer11 = firstRec1[acolNum] + "|" + "0";
-		ArrayList<String> posCount=  new ArrayList<String>();
-		String[] incomingRow;
-
-		for (int i = 0 ; i<result.size();i++){
-			incomingRow=result.get(i).toString().split("\\|");
-			if(i==0){
-				updateSchema(schema,operator,incomingRow);	
-			}
-			if (incomingRow[gcolNum].equals(record1)){
-				if (incomingRow[acolNum].equals(record11)){
-					answer11 = answer11 + "|" + i; 
-				}
-				else if (tool.isSmall(type, incomingRow[acolNum], record11)){
-					record11 = incomingRow[acolNum];
-					answer11 = incomingRow[acolNum]+"|" +i ;
-				}
+	private static ArrayList<String> min(ArrayList<StringBuilder> result, 
+			int acolNum, int gcolNum, String type){
+		String min = "";
+		String gdataFlag = "";
+		String dataFlag = "";
+		String[] rowStrings;
+		//String is consisted like (the last position,max)
+		String posMinString;
+		ArrayList<String> posMin = new ArrayList<>();
+		
+		for (int i = 0; i < result.size(); i++) {
+			rowStrings = result.get(i).toString().split("\\|");
+			dataFlag = rowStrings[acolNum];
+			
+			if(i == 0){
+				gdataFlag = rowStrings[gcolNum];
+				min = dataFlag;
 			}
 			
-			else{
-				int currentpos = i-1;
-				if (currentpos!= -1){
-				posCount.add( answer11);
-			}
-
-				record11 = result.get(i).toString().split("\\|")[acolNum];
-				answer11 = result.get(i).toString().split("\\|")[acolNum]+ "|" + i;
-				record1 = result.get(i).toString().split("\\|")[gcolNum];
-			}
-			if (i==result.size()-1 ){
-				posCount.add( answer11);
+			if(gdataFlag.equals(rowStrings[gcolNum])){
+				if(!dataFlag.equalsIgnoreCase("null")){
+					if(tool.isLarge(type, min, dataFlag)){
+						min = dataFlag;
+					}
+				}
+				if(i == result.size()-1){
+					posMinString = i + "," + min;
+					posMin.add(posMinString);
+				}
+			}else{
+				posMinString = i-1 + "," + min;
+				posMin.add(posMinString);
+				gdataFlag = rowStrings[gcolNum];
+				min = dataFlag;
+				if(i == result.size()-1){
+					posMinString = i + "," + min;
+					posMin.add(posMinString);
+				}
 				
 			}
-		}
-		
-		for (int i =0; i< posCount.size();i++){
-			String addb [] = posCount.get(i).split("\\|");
-				for ( int j=1; j<2;j++){
-					
-					StringBuilder mysb = new StringBuilder();
-					mysb.append("|" +addb[0]); 
-					result.get(Integer.valueOf(addb[j])).append(mysb);
-				}
-				for ( int j=3; j<addb.length;j++){
-					
-					StringBuilder mysb = new StringBuilder();
-					mysb.append("|" +addb[0]); 
-					result.get(Integer.valueOf(addb[j])).append(mysb);
-				}
 
 		}
-		StringBuilder mynull = new StringBuilder();
-		mynull.append("|"  +"null");
-		
-		for ( int i =0 ; i< result.size();i++){
-			String [] temp = result.get(i).toString().split("\\|");
-			if (temp.length==oriLen){
-				result.get(i).append(mynull);
-
-			}
-		}		
+		return posMin;
 	}
 	
 	//min without group by
-	private static void min(HashMap<String, HashMap<String, String>> schema,
-			String operator, ArrayList<StringBuilder> result, int acolNum,String type){
-		int oriLen = result.get(0).toString().split("\\|").length;
-		String [] firstRec1 = result.get(0).toString().split("\\|");
-		String record1 =firstRec1[acolNum] ;
-		String answer1 = firstRec1[acolNum];
-		String[] incomingRow;
+	private static String min(HashMap<String, HashMap<String, String>> schema,
+			ArrayList<StringBuilder> result, int colNum,String type){
+		String min = "";
+		String[] resultRow;
+		String minPos = "";
 		for (int i = 0 ; i<result.size();i++){
-			incomingRow = result.get(i).toString().split("\\|");
+			resultRow = result.get(i).toString().split("\\|");
 			if(i==0){
-				updateSchema(schema,operator,incomingRow);
+				min = resultRow[colNum];
 			}
-			if (tool.isSmall(type, incomingRow[acolNum], record1)){
-				record1 = incomingRow[acolNum];
-				answer1 = incomingRow[acolNum]+"|" +i ;
-			}
-			else if (incomingRow[acolNum].equals(record1)){
-				answer1 = answer1 + "|" + i; 
+			if (tool.isLarge(type, min, resultRow[colNum])){
+				min = resultRow[colNum];
+				minPos = min+"," +i ;
 			}
 		}
-		StringBuilder mysb = new StringBuilder();
-		mysb.append("|"  +record1);
-		StringBuilder mynull = new StringBuilder();
-		mynull.append("|"  +"null");
-		String[] addBack1 = answer1.split("\\|");
-		for (int i =1 ; i<addBack1.length;i++){
-			result.get(Integer.valueOf(addBack1[i])).append(mysb);
-		}
-
-		for ( int i =0 ; i< result.size();i++){
-			String [] temp = result.get(i).toString().split("\\|");
-			if (temp.length==oriLen){
-				result.get(i).append(mynull);
-			}
-		}
+		return minPos;
 	}
 }
