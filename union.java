@@ -8,18 +8,18 @@ public class union {
 	public ArrayList<StringBuilder> unionTable(ArrayList<StringBuilder> result1, 
 			ArrayList<StringBuilder> result2){
 		
-		HashMap<Integer, StringBuilder> result = new HashMap<>();
+		HashMap<Integer, String> result = new HashMap<>();
 		
 		for (int i = 0; i < result1.size(); i++) {
-			if(!result.containsValue(result1.get(i))){
-				result.put(i, result1.get(i));
+			if(!result.containsValue(result1.get(i).toString())){
+				result.put(i, result1.get(i).toString());
 			}else{
 				result1.remove(i);
 				i--;
 			}
 		}
 		for (int i = 0; i < result2.size(); i++) {
-			if(!result.containsValue(result2.get(i))){
+			if(!result.containsValue(result2.get(i).toString())){
 				result1.add(result2.get(i));
 			}
 			result2.remove(i);
