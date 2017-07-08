@@ -13,8 +13,10 @@ public class scan {
 	private String tableName;
 	private String tempString = null;
 	private String path = main.path;
+	private int totalLineNum;
 	private long chars=0;//chars指的是字符数 
 	public scan(String tableName) {
+		this.totalLineNum = getFileLine(tableName);
 		this.tableName = tableName;
 	}
 
@@ -31,12 +33,13 @@ public class scan {
 	        
 	        tempString = rf.readLine();
 	        chars = rf.getFilePointer(); 
+	        sb.append(tempString);
+	        tempString = rf.readLine();
 	        if(tempString == null){
 	        	flag = true;
 				chars = 0;
-				tempString = "";
 	        }
-	        sb.append(tempString);
+	        
 	        
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
@@ -48,6 +51,36 @@ public class scan {
           
         
 		return sb;
+	}
+	
+	public int getFileLine(String tableName){
+		File file = new File(tableName+".csv");
+		String line = "";
+		int count = 0;
+		try {
+			FileInputStream fis = new FileInputStream(file);
+			BufferedReader br = new BufferedReader(new InputStreamReader(fis));
+			while((line=br.readLine())!=null){
+				count++;
+			}
+			
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return count;
+	}
+
+	
+	public int getTotalLineNum() {
+		return totalLineNum;
+	}
+
+	public void setTotalLineNum(int totalLineNum) {
+		this.totalLineNum = totalLineNum;
 	}
 
 	public boolean isFlag() {
