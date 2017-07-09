@@ -36,21 +36,12 @@ public class joinCross {
 		boolean updateFlag2 = true;
 		
 		//The first file
-		while(!scan1.isFlag()){
+		for (int i = 0; i < scan1.getTotalLineNum(); i++) {
 			row1 = scan1.scanFile();
-			
-			if(scan2.isFlag()){
-				scan2.setFlag(false);
-			}
 			//The second file
-			while(!scan2.isFlag()){
+			for (int j = 0; j < scan2.getTotalLineNum(); j++) {
 				row2 = scan2.scanFile();
-				
-				if(scan3.isFlag()){
-					scan3.setFlag(false);
-				}
-				row3 = join.joinRow(newSchema,oldSchema,null,row1, row2,joinQuery.get(0), true,updateFlag1);
-							
+				row3 = join.joinRow(newSchema,oldSchema,null,row1, row2,joinQuery.get(0), true,updateFlag1);		
 				if(count == 0){
 					newSchema = join.getNewSchema();
 					updateFlag1 = false;
@@ -58,7 +49,7 @@ public class joinCross {
 					
 				}
 				//the third file(cross product)
-				while(!scan3.isFlag()){
+				for (int k = 0; k < scan3.getTotalLineNum(); k++) {
 					row4 = scan3.scanFile();
 					row = cross.crossProduct(oldSchema, newSchema, crossTableName, row3, row4, joinQuery.get(0), updateFlag2);
 					if(count == 1){
@@ -67,7 +58,7 @@ public class joinCross {
 					}
 					//if row exist, do the next step
 					if(row.length()>0){
-					processPlainSelect.processAfterJoin(row, whereCondition, havingCondition, groupByTable, orderByTable, fromTable, projectTable, distinctTable, subQueryTable);
+						processPlainSelect.processAfterJoin(row, whereCondition, havingCondition, groupByTable, orderByTable, fromTable, projectTable, distinctTable, subQueryTable);
 					}
 				}	
 			}
@@ -108,27 +99,16 @@ public class joinCross {
 		StringBuilder row6= new StringBuilder();
 		
 		int count = 0;
-		int temp1 = 0;
-		int temp2 = 0;
-		int temp3 = 0;
-		int temp4 = 0;
 		boolean updateFlag1 = true;
 		boolean updateFlag2 = true;
 		boolean updateFlag3 = true;
 		//The first file
-		while(!scan1.isFlag()){
+		for (int i = 0; i < scan1.getTotalLineNum(); i++) {
 			row1 = scan1.scanFile();
-			if(scan2.isFlag()){
-				scan2.setFlag(false);
-			}
 			//The second file
-			while(!scan2.isFlag()){
+			for (int j = 0; j < scan2.getTotalLineNum(); j++) {
 				row2 = scan2.scanFile();
-				if(scan3.isFlag()){
-					scan3.setFlag(false);
-				}
-				row3 = join.joinRow(newSchema,oldSchema,null,row1, row2,joinQuery.get(0), true,updateFlag1);
-						
+				row3 = join.joinRow(newSchema,oldSchema,null,row1, row2,joinQuery.get(0), true,updateFlag1);	
 				if(count == 0){
 					newSchema = join.getNewSchema();
 					updateFlag1 = false;
@@ -136,11 +116,8 @@ public class joinCross {
 					
 				}
 				//the third file
-				while(!scan3.isFlag()){
+				for (int k = 0; k < scan3.getTotalLineNum(); k++) {
 					row4 = scan3.scanFile();
-					if(scan4.isFlag()){
-						scan4.setFlag(false);
-					}
 					row5 = join.joinRow(newSchema,oldSchema,null,row3, row4,joinQuery.get(1), false,updateFlag2);
 					
 					if(count == 1){
@@ -149,7 +126,7 @@ public class joinCross {
 						count++;
 					}
 					//the fourth file(cross product)
-					while(!scan4.isFlag()){
+					for (int l = 0; l < scan4.getTotalLineNum(); l++) {
 						row6 = scan4.scanFile();
 						row = cross.crossProduct(oldSchema, newSchema, crossTableName, row5, row6, joinQuery.get(1), updateFlag3);
 						if(count == 2){
@@ -159,8 +136,7 @@ public class joinCross {
 						
 						//if row exist, do the next step
 						if(row.length()>0){
-							System.out.println(row);
-							//processPlainSelect.processAfterJoin(row, whereCondition, havingCondition, groupByTable, orderByTable, fromTable, projectTable, distinctTable, subQueryTable);
+							processPlainSelect.processAfterJoin(row, whereCondition, havingCondition, groupByTable, orderByTable, fromTable, projectTable, distinctTable, subQueryTable);
 						}
 					}
 					
@@ -169,6 +145,5 @@ public class joinCross {
 		}
 		return result;
 	}
-	
 	
 }
