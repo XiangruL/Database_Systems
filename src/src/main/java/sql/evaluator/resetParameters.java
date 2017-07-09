@@ -8,6 +8,7 @@ import net.sf.jsqlparser.statement.select.SelectBody;
 
 public class resetParameters {
 	
+	/* Reset all parameters when start a new query */
 	public static void resetAll() {
 		parseSelect.aliasNameMap = new HashMap<String, String>();
 		parseSelect.subAliasNameMap = new HashMap<String, String>();

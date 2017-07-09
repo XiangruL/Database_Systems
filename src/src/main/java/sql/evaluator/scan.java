@@ -6,61 +6,50 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.RandomAccessFile;
 
 public class scan {
-	private int lineNum = 1;
-	private int totalLineNum;
 	private boolean flag = false;
 	private String tableName;
-	private StringBuilder l;
-	private String line;
-
-	
+	private String tempString = null;
+	private String path = main.path;
+	private int totalLineNum;
+	private long chars=0;//chars指的是字符数 
 	public scan(String tableName) {
-		totalLineNum = getFileLine(tableName);
+		this.totalLineNum = getFileLine(tableName);
 		this.tableName = tableName;
 	}
-	
+
 	public StringBuilder scanFile(){
-		String path = main.path;
-		
 		StringBuilder sb = new StringBuilder();
-//		if(flag){
-//			return sb;
-//		}
-		//String line = "";
-		int count = 0;
-		File file = new File(path + tableName+".csv");
-		try {
-			FileInputStream fis = new FileInputStream(file);
-			BufferedReader br = new BufferedReader(new InputStreamReader(fis));
-			while((line=br.readLine())!=null){
-				
-				count++;
-				
-				if(count==lineNum){
-					sb.append(line);
-					break;
-				}
-				
-			}
-			lineNum++;
-			
-			if((lineNum - totalLineNum) ==1){
-				flag = true;
-				fis.getChannel().position(0);
-				lineNum = 1;
-			}	
+		String fileName = path+tableName+".csv";
+        File file = new File(fileName);  
+          
+        RandomAccessFile rf = null;   
+        
+        try {
+			rf = new RandomAccessFile(fileName, "r");
+	        rf.seek(chars);   
+	        
+	        tempString = rf.readLine();
+	        chars = rf.getFilePointer(); 
+	        sb.append(tempString);
+	        tempString = rf.readLine();
+	        if(tempString == null){
+	        	flag = true;
+				chars = 0;
+	        }
+	        
+	        
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}
-		
-		
-		l = sb;
+		}  
+          
+        
 		return sb;
 	}
 	
@@ -85,20 +74,14 @@ public class scan {
 		return count;
 	}
 
-	public int getLineNum() {
-		return lineNum;
-	}
-
-	public void setLineNum(int lineNum) {
-		this.lineNum = lineNum;
-	}
 	
-	
-
 	public int getTotalLineNum() {
 		return totalLineNum;
 	}
 
+	public void setTotalLineNum(int totalLineNum) {
+		this.totalLineNum = totalLineNum;
+	}
 
 	public boolean isFlag() {
 		return flag;
@@ -106,16 +89,6 @@ public class scan {
 
 	public void setFlag(boolean flag) {
 		this.flag = flag;
-	}
-
-	public String getTableName() {
-		return tableName;
-	}
-
-	public StringBuilder getLine() {
-		return l;
 	}	
-	
-	
 	
 }

@@ -4,12 +4,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+
 
 import net.sf.jsqlparser.expression.BinaryExpression;
 import net.sf.jsqlparser.expression.Expression;
-import net.sf.jsqlparser.expression.ExpressionVisitor;
+import net.sf.jsqlparser.expression.Parenthesis;
 import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
 import net.sf.jsqlparser.expression.operators.conditional.OrExpression;
 import net.sf.jsqlparser.expression.operators.relational.EqualsTo;
@@ -20,19 +19,15 @@ import net.sf.jsqlparser.expression.operators.relational.LikeExpression;
 import net.sf.jsqlparser.expression.operators.relational.MinorThan;
 import net.sf.jsqlparser.expression.operators.relational.MinorThanEquals;
 import net.sf.jsqlparser.expression.operators.relational.NotEqualsTo;
-import net.sf.jsqlparser.statement.Statement;
-import net.sf.jsqlparser.statement.create.table.ColumnDefinition;
-import net.sf.jsqlparser.statement.select.Select;
 import net.sf.jsqlparser.statement.select.SelectBody;
 import net.sf.jsqlparser.statement.select.SelectItem;
-import net.sf.jsqlparser.statement.select.SetOperationList;
 import net.sf.jsqlparser.statement.select.SubSelect;
-import net.sf.jsqlparser.statement.select.Union;
 import net.sf.jsqlparser.statement.select.Distinct;
 import net.sf.jsqlparser.statement.select.FromItem;
 import net.sf.jsqlparser.statement.select.Join;
 import net.sf.jsqlparser.statement.select.OrderByElement;
 import net.sf.jsqlparser.statement.select.PlainSelect;
+import net.sf.jsqlparser.statement.select.Select;
 public class parseSelect {
 	
 	protected static HashMap<String, String> aliasNameMap = new HashMap<String, String>();
@@ -65,7 +60,6 @@ public class parseSelect {
 		 *            GROUP-BY: R.A
 		 *            ORDER-BY: R.C
 		 */
-//		SelectBody selectBd = ((Select) stmt).getSelectBody();
 		/* mapping alias to full table name
 		 * key - alias, value - table name
 		 */
@@ -81,7 +75,7 @@ public class parseSelect {
 		List<SelectItem> selectItemList =  ((PlainSelect) selectBd).getSelectItems();
 		/* group by list */
 		List<Expression> groupByItemList = ((PlainSelect) selectBd).getGroupByColumnReferences();
-//		/* order by list */
+		/* order by list */
 		List<OrderByElement> orderByItemList = ((PlainSelect) selectBd).getOrderByElements();
 		/* where conditions */
 		Expression whereEx = ((PlainSelect) selectBd).getWhere();
@@ -90,8 +84,6 @@ public class parseSelect {
 		/* distinct item */
 		Distinct distinctI = ((PlainSelect) selectBd).getDistinct();
 		
-//		System.out.println(((Union) selectBd).toString());
-
 		List<Expression> whereList = new ArrayList<Expression>();
 	
 		
@@ -132,6 +124,32 @@ public class parseSelect {
 		}
 		
 		
+		
+		/* encounter nested query */
+		if (joinList != null) {
+			for (int i = 0; i < joinList.size(); i++) {
+				if ( joinList.get(i).toString().contains("(")) {
+					System.out.println("PROJECTION: " + selectItemList.toString().substring(1, selectItemList.toString().length() - 1));
+					StringBuilder temp = new StringBuilder(joinList.get(i).toString());
+					temp.append(", ");
+					String prefix = "";
+					for (int j = 0; j < joinList.size(); j++) {
+						if (j != i) {
+							temp.append(prefix);
+							prefix = ", ";
+							temp.append(joinList.get(j).toString().split(" ")[0]);
+						}
+					}
+					System.out.println("FROM: " + temp);
+					System.out.println("SELECTION: " +  selectItemList.toString().substring(1, selectItemList.toString().length() - 1));
+					System.out.println("GROUP BY: " + groupByItemList);
+					System.out.println("ORDER BY: " + orderByItemList);
+					return null;
+				}
+			}
+		}
+
+		
 		/** get joins **/
 		StringBuilder join = new StringBuilder();
 		join.append("JOIN: ");
@@ -153,6 +171,8 @@ public class parseSelect {
 			}
 		}
 		
+
+		
 		
 		/** after having all names and alias print all from item **/
 		if (!subQueryFlag) {
@@ -166,6 +186,7 @@ public class parseSelect {
 		}		
 		from.append(fromTable.toString().substring(1, fromTable.toString().length() - 1));
 		from.append("\n");
+
 
 		
 		/** get select item **/
@@ -317,7 +338,6 @@ public class parseSelect {
 		}
 				
 		/** get having **/
-		StringBuilder having = new StringBuilder();
 		// having contains and
 		if (havingEx != null){
 			if (!subQueryFlag) {
@@ -331,10 +351,8 @@ public class parseSelect {
 		if (distinctI != null) {
 			if (distinctI.toString().toLowerCase().equals("distinct")) {
 				if (!subQueryFlag) {
-//					distinctTable = new ArrayList<String>();
 					distinctTable.add(projectTable.get(0));
 				} else {
-//					subDistinctTable = new ArrayList<String>();
 					subDistinctTable.add(subProjectTable.get(0));
 				}
 				
@@ -362,7 +380,6 @@ public class parseSelect {
 			}
 		}
 
-		
 		/** Print out the query evaluated result **/
 		if (!subQueryFlag) {
 			res.add(0, project);
@@ -416,35 +433,27 @@ public class parseSelect {
 				parseSubQuery(subQueryTable.get(0));
 			}
 			else {
-				return processPlainSelect.algebraGen(parseSelect.joinTable, parseSelect.whereCondition, parseSelect.havingCondition, parseSelect.groupByTable, parseSelect.orderByTable, parseSelect.fromTable, parseSelect.projectTable, parseSelect.distinctTable, subRes);		
+				subRes = processPlainSelect.algebraGen(parseSelect.joinTable, parseSelect.whereCondition, parseSelect.havingCondition, parseSelect.groupByTable, parseSelect.orderByTable, parseSelect.fromTable, parseSelect.projectTable, parseSelect.distinctTable, subRes);
 			}
 		} else {
-//			System.out.println(subWhereCondition);
-//			System.out.println(subFromTable);
-//			System.out.println(subWhereCondition);
-//			System.out.println(subHavingCondition);
-//			System.out.println(subGroupByTable);
-			
 			subRes =  processPlainSelect.algebraGen(subJoinTable, subWhereCondition, subHavingCondition, subGroupByTable, subOrderByTable, subFromTable, subProjectTable, subDistinctTable, subRes);
 			subRes = processPlainSelect.algebraGen(parseSelect.joinTable, parseSelect.whereCondition, parseSelect.havingCondition, parseSelect.groupByTable, parseSelect.orderByTable, parseSelect.fromTable, parseSelect.projectTable, parseSelect.distinctTable, subRes);		
 		}
-//		res.append(condition.toString());
-//		res.append(distinctTable);
-//		res.append(joinTable);
-//		res.append(fromTable);
-//		res.append(whereCondition);
-//		res.append(where);
-//		res.append("sub is" + subQueryTable);
-//		res.append(whereCondition.toString());
-//		res.append(havingCondition.toString());
 
 		return new ArrayList<StringBuilder>();
 	}
 	
+	/* Enter a subquery */
 	public static void parseSubQuery(SelectBody selectBd) {
 		splitStatement(selectBd, true);
 	}
 	
+	/** Translate a give alias or name to a full table name
+	 * 
+	 * @param o - given object
+	 * @param s - to append full name in this string builder
+	 * @return
+	 */
 	public static StringBuilder aliasToName(Object o, StringBuilder s) {
 		// has alias and can split
 		if (o == null) 
@@ -476,118 +485,9 @@ public class parseSelect {
 				s.append(temp);
 			}
 		}
-//		s.append(" ");
 		return s;
 	}
 	
-	
-	/** generate relation algebra **/
-//	public static void algebraGen() {
-//		// control it's the first time to enter the join loop to scan a line
-//		boolean startFlag = true;
-//		// control to stop the outer loop or not
-//		boolean stopFlag = true;
-//		// control update schema or not
-//		boolean updateSchema = true;
-//		// order by exists or not
-//		boolean groupByFlag = false;
-//		ArrayList<scan> scanners = new ArrayList<scan>();
-//		ArrayList<StringBuilder> result = new ArrayList<StringBuilder>();
-//		String query = "";
-//		for (String s : fromTable) {
-//			scan current = new scan(s);
-//			scanners.add(current);
-//		}
-//		stopFlag = scanners.get(0).isFlag();
-//		
-//		while (!stopFlag) {
-//			parseSelect.schema = createTable.allTable;
-//			StringBuilder temp2 = new StringBuilder();
-//			int joinIndex = 0;
-//			
-//			/* join */
-//			if (joinTable != null && !joinTable.isEmpty()) {
-//				temp2 = joinTwoTable(scanners.get(0), scanners.get(1), joinTable.get(joinIndex), startFlag, createTable.allTable, true, updateSchema);
-//				startFlag = false;
-//				if (temp2.length() == 0)
-//					break;
-//				joinIndex++;
-//
-//				for (int i = 2; i < scanners.size(); i++) {
-//					temp2 = parseSelect.joinRowAndTable(temp2, scanners.get(i), fromTable.get(i), joinTable.get(joinIndex), parseSelect.schema, false, updateSchema);
-//					if (temp2.length() == 0)
-//						break;
-//					joinIndex++;
-//				}
-//			} else {
-//				temp2 = scanners.get(0).scanFile();
-//			}
-//			if (temp2.length() == 0)
-//				break;
-//			// after joining once, no need to update schema
-//			stopFlag = scanners.get(0).isFlag();
-//			updateSchema = false;
-//
-//			/* where condition */
-//			if (whereCondition.size() != 0) {
-//				for (String s : whereCondition) {
-//					temp2 = select.selectRow(parseSelect.schema, temp2, s);
-//					// not meet the select requirement
-//					if (temp2 == null) {
-//						break;
-//					}
-//				}
-//			}	
-//			
-//			/* group by */
-//			if (parseSelect.groupByTable != null && parseSelect.groupByTable.get(0) != null) {
-//				groupByFlag = true;
-//				result = group.groupBy(result, parseSelect.schema, temp2, groupByTable.get(0));
-//			}
-//			
-//			/* order by */
-//			if (parseSelect.groupByTable != null && parseSelect.orderByTable.get(0) != null) {
-//				if (groupByFlag) {
-//					// orderBy2(ArrayList<StringBuilder> result, HashMap<String, HashMap<String, String>> scheme,String query,StringBuilder singleRecord )
-//					result = Orderby2.orderBy2(result, parseSelect.schema, orderByTable.get(0), temp2);
-//				} else {
-//					result = Orderby2.orderBy2(result, parseSelect.schema, orderByTable.get(0), temp2);
-//				}		
-//			}
-//			/* projection */
-//			if (!groupByFlag) {
-//				query = projectTable.toString().substring(1, projectTable.toString().length() - 1);
-//				result = projection.proTable(result, parseSelect.schema, temp2, query);
-//			}
-//			/* distinct */
-//			if (distinctTable != null) {
-//				query = distinctTable.toString().substring(1, distinctTable.toString().length() - 1);
-//				result = distinct.dist(parseSelect.schema, result, query.toString());
-//			}
-//		}
-//		
-//		/* having */
-//		if (!havingCondition.isEmpty()) {
-//			// havingSelect(HashMap<String, HashMap<String, String>> schema, ArrayList<StringBuilder> result, String aggQuery, String groupQuery)
-//			having.havingSelect(parseSelect.schema, result, havingCondition.get(0).toString().toLowerCase(), groupByTable.get(0));
-//		}
-//		
-//		/* projection if there has group by */
-//		if (groupByFlag) {
-//			query = projectTable.toString().substring(1, projectTable.toString().length() - 1);
-//			result = projection.proTable(result, parseSelect.schema, query);
-//		}
-//		
-//		/* distinct */
-//		if (groupByFlag && distinctTable != null) {
-//			query = distinctTable.toString().substring(1, distinctTable.toString().length() - 1);
-//			result = distinct.dist(parseSelect.schema, result, query.toString());
-//		}
-
-//		for (StringBuilder s : result)
-//			System.out.println(s.toString());
-//	}
-
 	
 	/** parse where/having statement containing and
 	 *  return a list of seperated condition **/
@@ -711,8 +611,7 @@ public class parseSelect {
 	 * @return
 	 */
 	public static StringBuilder joinTwoTable(scan scanner1, scan scanner2, String query, boolean startFlag, HashMap<String, HashMap<String, String>> oldschema, boolean joinF, boolean updateSchema) {
-		boolean flag = scanner1.isFlag();
-		StringBuilder temp = new StringBuilder();
+		StringBuilder temp;
 		while (!scanner1.isFlag()) {
 			// table1 first enter the join method, need to scan a line
 			if (startFlag) {
@@ -730,7 +629,7 @@ public class parseSelect {
 			// table2 does not reach the bottom
 			while(!scanner2.isFlag()) {
 				StringBuilder temp2 = new StringBuilder();
-				temp2 = join.joinRow(oldschema, createTable.allTable, null, scanner1.getLine(), scanner2.scanFile(), query, joinF, updateSchema);
+//				temp2 = join.joinRow(oldschema, createTable.allTable, null, scanner1.getLine(), scanner2.scanFile(), query, joinF, updateSchema);
 				updateSchema = false;
 				if (temp2 != null && temp2.length() > 0) {
 					parseSelect.schema = join.getNewSchema();
@@ -937,6 +836,10 @@ public class parseSelect {
 			temp = aliasToName(leftE, temp);
 			temp.append(" in");
 			subQueryTable.add((SelectBody) ((SubSelect) ((InExpression) s).getRightItemsList()).getSelectBody());
+			return temp.toString();	
+		} else if (s instanceof Parenthesis) {
+			StringBuilder temp = new StringBuilder();
+
 			return temp.toString();	
 		}
 		return s.toString();

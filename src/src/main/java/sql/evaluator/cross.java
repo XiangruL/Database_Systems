@@ -8,21 +8,15 @@ public class cross {
 	
 	public static StringBuilder crossProduct(HashMap<String, HashMap<String, String>> oldSchema,
 			HashMap<String, HashMap<String, String>> newSchema,String tableName,
-			StringBuilder row1, StringBuilder row2, String joinQuery, boolean updateFlag){
+			StringBuilder row1, StringBuilder row2, boolean updateFlag){
 		StringBuilder row = new StringBuilder();
 		if(row1.length()>0){
 			
 			if(updateFlag){
-				//parse query to get table name and column name
-				String[] qstr = joinQuery.split("\\s+");
-				String[] tcName1 = qstr[0].split("\\.");
-				String[] tcName2 = qstr[2].split("\\.");
+				int index = join.index+1;
 				
-				String tableName1 = tcName1[0];
-				String tableName2 = tcName2[0];
-				int index = newSchema.get(tableName1).size()+newSchema.get(tableName2).size()-1;
 				updateSchema(oldSchema,newSchema,index,tableName);
-				System.out.println("cross:"+newSchema);
+			
 			}
 			
 			row.append(row1.toString()+"|"+row2.toString());

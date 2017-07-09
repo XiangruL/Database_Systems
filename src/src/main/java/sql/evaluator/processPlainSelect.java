@@ -1,10 +1,7 @@
 package sql.evaluator;
 
-import java.io.FileNotFoundException;
 import java.util.ArrayList;
-import java.util.HashMap;
 
-import net.sf.jsqlparser.statement.select.SelectBody;
 
 public class processPlainSelect {
 	/** generate relation algebra **/
@@ -14,14 +11,9 @@ public class processPlainSelect {
 			ArrayList<String> joinTable, ArrayList<String> whereCondition, ArrayList<String> havingCondition, 
 			ArrayList<String> groupByTable, ArrayList<String> orderByTable, ArrayList<String> fromTable,
 			ArrayList<String> projectTable, ArrayList<String> distinctTable, ArrayList<StringBuilder> subRes) {
-		// control it's the first time to enter the join loop to scan a line
-		boolean startFlag = true;
-		// control to stop the outer loop or not
-		boolean stopFlag = true;
 		// control update schema or not
 		boolean updateSchema = true;
-		// order by exists or not
-		boolean finishFlag = false;
+
 		
 		
 		ArrayList<scan> scanners = new ArrayList<scan>();
@@ -31,20 +23,9 @@ public class processPlainSelect {
 			scan current = new scan(s);
 			scanners.add(current);
 		}
-//		stopFlag = scanners.get(0).isFlag();
 		parseSelect.schema = createTable.allTable;
-
-//		boolean[] flagSet = new boolean[fromTable.size() - 1];
-//		StringBuilder[] rowSet = new StringBuilder[fromTable.size() - 1];
-//		HashMap[] schemaSet = new HashMap[fromTable.size() - 1];
-		
-//		while (!stopFlag) {
-//			parseSelect.schema = createTable.allTable;
-//			stopFlag = scanners.get(0).isFlag();
-//			scanners.get(0).isFlag();
-//			StringBuilder temp2 = new StringBuilder();
-//			int joinIndex = 0;
 			
+		/* No join */
 		if (joinTable.size() == 0) {
 			for (int i = 0; i < scanners.get(0).getTotalLineNum(); i++) {
 				StringBuilder temp = scanners.get(0).scanFile();
@@ -53,7 +34,8 @@ public class processPlainSelect {
 		}
 
 		/* join */
-		if (joinTable.size() == 1) {
+		/* Two tables inner join */
+		if (joinTable.size() == 1 && fromTable.size() == 0) {
 			StringBuilder temp1;
 			StringBuilder temp2;
 			StringBuilder temp3;
@@ -66,14 +48,14 @@ public class processPlainSelect {
 					parseSelect.schema = join.getNewSchema();
 					updateSchema = false;
 					if (temp2.length() != 0) {
-//						System.out.println(parseSelect.schema);
 						processAfterJoin(temp2, whereCondition, havingCondition, groupByTable, orderByTable, fromTable, projectTable, distinctTable, subRes);
 					}
 				}
 			}
 		}
 
-		if (joinTable.size() == 2) {
+		/* Three tables inner join or with a cross product */
+		if (joinTable.size() == 2 || (fromTable.size() == 3 && joinTable.size() == 1)) {
 			StringBuilder temp1;
 			StringBuilder temp2;
 			StringBuilder temp3 = new StringBuilder();
@@ -89,21 +71,23 @@ public class processPlainSelect {
 					for (int k  = 0; k < scanners.get(2).getTotalLineNum(); k++) {
 						temp3 = new StringBuilder();
 						if (temp2.length() != 0) {
-							temp3 = join.joinRow(parseSelect.schema, createTable.allTable, fromTable.get(2), temp2, scanners.get(2).scanFile(), joinTable.get(1), false, updateSchema2);
-//							System.out.println(temp3);
-							parseSelect.schema = join.getNewSchema();
+							if(joinTable.size() == 1) {
+								temp3 = cross.crossProduct(parseSelect.schema, parseSelect.schema, fromTable.get(2).toString(), temp2, scanners.get(2).scanFile(), updateSchema2);
+							} else {
+								temp3 = join.joinRow(parseSelect.schema, createTable.allTable, fromTable.get(2), temp2, scanners.get(2).scanFile(), joinTable.get(1), false, updateSchema2);
+								parseSelect.schema = join.getNewSchema();
+							}
 							updateSchema2 = false;
 						}
 						if (temp3.length() != 0) {
-//							System.out.println(parseSelect.schema);
 							processAfterJoin(temp3, whereCondition, havingCondition, groupByTable, orderByTable, fromTable, projectTable, distinctTable, subRes);
 						}
 					}				
 				}
 			}
 		}
-
-		if (joinTable.size() == 3) {
+		/* Four tables inner join or with a cross product */
+		if (joinTable.size() == 3 || (fromTable.size() == 4 && joinTable.size() == 2)) {
 			StringBuilder temp1;
 			StringBuilder temp2;
 			StringBuilder temp3 = new StringBuilder();
@@ -127,8 +111,12 @@ public class processPlainSelect {
 						for (int l  = 0; l < scanners.get(3).getTotalLineNum(); l++) {
 							temp4 = new StringBuilder();
 							if (temp3.length() != 0) {
-								temp4 = join.joinRow(parseSelect.schema, createTable.allTable, fromTable.get(3), temp3, scanners.get(3).scanFile(), joinTable.get(2), false, updateSchema3);
-								parseSelect.schema = join.getNewSchema();
+								if(joinTable.size() == 2) {
+//									temp4 = cross.crossProduct(parseSelect.schema, parseSelect.schema, fromTable.get(3).toString(), temp3, scanners.get(3).scanFile(), updateSchema3);
+								} else {
+									temp4 = join.joinRow(parseSelect.schema, createTable.allTable, fromTable.get(3), temp3, scanners.get(3).scanFile(), joinTable.get(2), false, updateSchema3);
+									parseSelect.schema = join.getNewSchema();
+								}
 								updateSchema3 = false;
 							}
 							if (temp4.length() != 0) {
@@ -139,71 +127,10 @@ public class processPlainSelect {
 				}
 			}
 		}
-//		System.out.println(result);
 
-		
-			processWholeTable(havingCondition, groupByTable, orderByTable, fromTable, projectTable, distinctTable, subRes);
+		// if there some operation such as having to handle a whole table, pass it to this method
+		processWholeTable(havingCondition, groupByTable, orderByTable, fromTable, projectTable, distinctTable, subRes);
 			
-			
-//			if (joinTable != null && !joinTable.isEmpty()) {
-//				if (!flagSet[0]) {
-//					temp2 = parseSelect.joinTwoTable(scanners.get(0), scanners.get(1), joinTable.get(0), startFlag, createTable.allTable, true, updateSchema);
-//					schemaSet[0] = parseSelect.schema;
-//					rowSet[0] = temp2;
-//					startFlag = false;
-//				}
-//
-//				for (int i = 2; i < scanners.size(); i++) {
-//					if (!flagSet[i - 1]) {
-//						// last join lock
-//						if (!flagSet[i - 2]) {
-//							if (schemaSet[i - 1] == null) {
-//								schemaSet[i - 1] = parseSelect.schema;
-//							}
-//							temp2 = parseSelect.joinRowAndTable(rowSet[i - 2], scanners.get(i), fromTable.get(i), joinTable.get(i - 1), schemaSet[i - 2], false, updateSchema);
-//						} else {
-//							if (schemaSet[i - 1] == null) {
-//								schemaSet[i - 1] = parseSelect.schema;
-//							}
-//							temp2 = parseSelect.joinRowAndTable(temp2, scanners.get(i), fromTable.get(i), joinTable.get(i - 1), schemaSet[i - 2], false, updateSchema);
-//						} 
-//						if (temp2.length() == 0) {
-//							flagSet[i - 2] = false;
-//							scanners.get(i).setFlag(false);
-//							break;
-//						} else {
-//							if (i == scanners.size() - 1)
-//								finishFlag = true;
-//							rowSet[i - 1] = temp2;
-//							if (scanners.get(i).isFlag()) {
-//								if (i == scanners.size() - 1) {
-//									flagSet[i - 2] = false;
-//									scanners.get(i).setFlag(false);
-//								}
-//								else if (scanners.get(i + 1).isFlag()) {
-//									flagSet[i - 2] = false;
-//									scanners.get(i).setFlag(false);
-//								}
-//							} else {
-//								flagSet[i - 2] = true;
-//							}
-//						}
-//					}
-//				}
-				
-//			} else {
-//				temp2 = scanners.get(0).scanFile();
-//			}
-//			// after joining once, no need to update schema
-//			if (finishFlag) {
-////				System.out.println(temp2);
-//				processAfterJoin(temp2, whereCondition, havingCondition, groupByTable, orderByTable, fromTable, projectTable, distinctTable, subQueryTable);
-//			}
-//			
-//			stopFlag = scanners.get(0).isFlag();
-//			updateSchema = false;
-//		}
-		
 		return result;
 	}
 		
@@ -231,12 +158,14 @@ public class processPlainSelect {
 				}
 			}
 		}	
+
 		
 
 		/* group by */
 		if (groupByTable != null && groupByTable.get(0) != null && temp2.length() != 0) {
 			groupByFlag = true;
 			result = group.groupBy(result, parseSelect.schema, temp2, groupByTable.get(0), fromTable);
+
 		}
 		
 
@@ -245,7 +174,6 @@ public class processPlainSelect {
 			if (groupByFlag) {
 				// orderBy2(ArrayList<StringBuilder> result, HashMap<String, HashMap<String, String>> scheme,String query,StringBuilder singleRecord )
 				result = order.orderBy(parseSelect.schema, result, temp2, orderByTable.get(0), groupByTable.get(0), fromTable);
-
 			} else {
 				// orderBy(HashMap<String, HashMap<String, String>> schema, ArrayList<StringBuilder> result, String orderQuery,StringBuilder row )
 				
@@ -274,20 +202,23 @@ public class processPlainSelect {
 			having.havingSelect(parseSelect.schema, result, havingCondition.get(0).toString().toLowerCase(), groupByTable.get(0), fromTable);
 		}
 		
-		/* orderby */
-		if (orderByTable != null && orderByTable.get(0) != null) {
+		/* order by */
+		if (!havingCondition.isEmpty() && orderByTable != null && orderByTable.get(0) != null) {
 			// havingSelect(HashMap<String, HashMap<String, String>> schema, ArrayList<StringBuilder> result, String aggQuery, String groupQuery)
 			result = order.orderBy(parseSelect.schema, result, orderByTable.get(0), fromTable);
 		}
 		
 		/* projection if there has group by */
 		if (groupByTable.get(0) != null) {
+
 			String query;
 			query = projectTable.toString().substring(1, projectTable.toString().length() - 1);
+
 			if (distinctTable != null) {
 				result = projection.proTable(result, parseSelect.schema, query, true, fromTable);
 			} else {
 				result = projection.proTable(result, parseSelect.schema, query, false, fromTable);
+				
 			}
 		}
 	

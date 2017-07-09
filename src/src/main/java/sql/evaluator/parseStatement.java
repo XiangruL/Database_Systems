@@ -23,9 +23,11 @@ public class parseStatement {
 		/* when statement is union */
 		if (selectBd instanceof SetOperationList) {
 			List<SelectBody> selects = ((SetOperationList) selectBd).getSelects();
-			ArrayList<StringBuilder> tempRes1 = parseSelect.splitStatement(selects.get(0), false);
+			parseSelect.splitStatement(selects.get(0), false);
+			ArrayList<StringBuilder> tempRes1 = parseSelect.subRes;
 			resetParameters.resetAll();
-			ArrayList<StringBuilder> tempRes2 = parseSelect.splitStatement(selects.get(1), false);
+			parseSelect.splitStatement(selects.get(1), false);
+			ArrayList<StringBuilder> tempRes2 = parseSelect.subRes;
 			ArrayList<StringBuilder> tempRes = union.unionTable(tempRes1, tempRes2);
 
 			printOutResult.printQueryResult(parseSelect.res);
@@ -33,7 +35,6 @@ public class parseStatement {
 			printOutResult.printOutFinalResult(tempRes);
 		/* when statement is plain select */
 		} else {
-
 			ArrayList<StringBuilder> tempRes = parseSelect.splitStatement(selectBd, false);
 			printOutResult.printQueryResult(parseSelect.res);
 			System.out.println("");
