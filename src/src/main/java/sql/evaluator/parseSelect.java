@@ -32,10 +32,13 @@ public class parseSelect {
 	
 	protected static HashMap<String, String> aliasNameMap = new HashMap<String, String>();
 	protected static HashMap<String, String> subAliasNameMap = new HashMap<String, String>();
+	protected static boolean aliasFlag = false;
 
 	protected static HashMap<String, HashMap<String, String>>  schema = createTable.allTable;
 	/* containing join condition, "table1.PID = table2.ID" */
 	protected static ArrayList<String> joinTable;
+	protected static ArrayList<String> join;
+
 	protected static ArrayList<Expression> condition;
 	protected static ArrayList<String> whereCondition;
 	protected static ArrayList<String> havingCondition;
@@ -101,6 +104,8 @@ public class parseSelect {
 		ArrayList<String> subDistinctTable = new ArrayList<String>();
 
 		/** get from item **/
+//		fromParser.parseFrom(fromItem, joinList);
+		
 		StringBuilder from = new StringBuilder();
 		from.append("FROM: ");
 		// has alias in from statement
@@ -171,8 +176,7 @@ public class parseSelect {
 			}
 		}
 		
-
-		
+	
 		
 		/** after having all names and alias print all from item **/
 		if (!subQueryFlag) {
@@ -610,36 +614,36 @@ public class parseSelect {
 	 * @param startFlag - true if it's first time to enter the join
 	 * @return
 	 */
-	public static StringBuilder joinTwoTable(scan scanner1, scan scanner2, String query, boolean startFlag, HashMap<String, HashMap<String, String>> oldschema, boolean joinF, boolean updateSchema) {
-		StringBuilder temp;
-		while (!scanner1.isFlag()) {
-			// table1 first enter the join method, need to scan a line
-			if (startFlag) {
-				temp = scanner1.scanFile();
-			} else {
-				// table1 need to scan a line when scanner 2 reach the bottom
-				if (scanner2.isFlag()) {
-					temp = scanner1.scanFile();
-				}
-			}
-			// table1 not at the bottom but table2 do, loop table2
-			if (!scanner1.isFlag() && scanner2.isFlag()) {		
-				scanner2.setFlag(false);
-			}
-			// table2 does not reach the bottom
-			while(!scanner2.isFlag()) {
-				StringBuilder temp2 = new StringBuilder();
-//				temp2 = join.joinRow(oldschema, createTable.allTable, null, scanner1.getLine(), scanner2.scanFile(), query, joinF, updateSchema);
-				updateSchema = false;
-				if (temp2 != null && temp2.length() > 0) {
-					parseSelect.schema = join.getNewSchema();
-					return temp2;
-				}
-			}
-		}
-		// no match at these two table, return an empty string builder
-		return new StringBuilder();
-	}
+//	public static StringBuilder joinTwoTable(scan scanner1, scan scanner2, String query, boolean startFlag, HashMap<String, HashMap<String, String>> oldschema, boolean joinF, boolean updateSchema) {
+//		StringBuilder temp;
+//		while (!scanner1.isFlag()) {
+//			// table1 first enter the join method, need to scan a line
+//			if (startFlag) {
+//				temp = scanner1.scanFile();
+//			} else {
+//				// table1 need to scan a line when scanner 2 reach the bottom
+//				if (scanner2.isFlag()) {
+//					temp = scanner1.scanFile();
+//				}
+//			}
+//			// table1 not at the bottom but table2 do, loop table2
+//			if (!scanner1.isFlag() && scanner2.isFlag()) {		
+//				scanner2.setFlag(false);
+//			}
+//			// table2 does not reach the bottom
+//			while(!scanner2.isFlag()) {
+//				StringBuilder temp2 = new StringBuilder();
+//				//				temp2 = join.joinRow(oldschema, createTable.allTable, null, scanner1.getLine(), scanner2.scanFile(), query, joinF, updateSchema);
+//				updateSchema = false;
+//				if (temp2 != null && temp2.length() > 0) {
+//					parseSelect.schema = join.getNewSchema();
+//					return temp2;
+//				}
+//			}
+//		}
+//		// no match at these two table, return an empty string builder
+//		return new StringBuilder();
+//	}
 	
 	/** join a pre-joined row and a row from a new table
 	 * 
@@ -652,21 +656,21 @@ public class parseSelect {
 	 * @param updateSchema - true need to update schema
 	 * @return a join output row
 	 */
-	public static StringBuilder joinRowAndTable(StringBuilder row, scan scanner, String tableName,String query, HashMap<String, HashMap<String, String>> oldschema, boolean joinF, boolean updateSchema) {
-		boolean flag = scanner.isFlag();
-		boolean schemaFlag = false;
-		StringBuilder temp = new StringBuilder();
-		while(!flag) {
-			flag = scanner.isFlag();
-			temp = join.joinRow(oldschema, createTable.allTable, tableName, row, scanner.scanFile(), query, joinF, updateSchema);
-			updateSchema = false;
-			if (temp != null && temp.length() > 0) {
-				parseSelect.schema = join.getNewSchema();
-				return temp;
-			}
-		}
-		return temp;
-	}
+//	public static StringBuilder joinRowAndTable(StringBuilder row, scan scanner, String tableName,String query, HashMap<String, HashMap<String, String>> oldschema, boolean joinF, boolean updateSchema) {
+//		boolean flag = scanner.isFlag();
+//		boolean schemaFlag = false;
+//		StringBuilder temp = new StringBuilder();
+//		while(!flag) {
+//			flag = scanner.isFlag();
+//			temp = join.joinRow(oldschema, createTable.allTable, tableName, row, scanner.scanFile(), query, joinF, updateSchema);
+//			updateSchema = false;
+//			if (temp != null && temp.length() > 0) {
+//				parseSelect.schema = join.getNewSchema();
+//				return temp;
+//			}
+//		}
+//		return temp;
+//	}
 	
 	
 	/** sort join table, so it can use this table directly in joining operation

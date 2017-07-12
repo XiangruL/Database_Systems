@@ -35,15 +35,15 @@ public class processPlainSelect {
 
 		/* join */
 		/* Two tables inner join */
-		if (joinTable.size() == 1 && fromTable.size() == 0) {
+		if (joinTable.size() == 1 && fromTable.size() == 2) {
 			StringBuilder temp1;
 			StringBuilder temp2;
 			StringBuilder temp3;
+			
 			for (int i = 0; i < scanners.get(0).getTotalLineNum(); i++) {
 				temp1 = scanners.get(0).scanFile();
 				for (int j  = 0; j < scanners.get(1).getTotalLineNum(); j++) {
 					temp3 = scanners.get(1).scanFile();
-//					System.out.println(temp3);
 					temp2 = join.joinRow(createTable.allTable, createTable.allTable, null, temp1, temp3, joinTable.get(0), true, updateSchema);
 					parseSelect.schema = join.getNewSchema();
 					updateSchema = false;
@@ -51,6 +51,9 @@ public class processPlainSelect {
 						processAfterJoin(temp2, whereCondition, havingCondition, groupByTable, orderByTable, fromTable, projectTable, distinctTable, subRes);
 					}
 				}
+			}
+			for (scan s : scanners) {
+				s.close();
 			}
 		}
 
@@ -85,7 +88,12 @@ public class processPlainSelect {
 					}				
 				}
 			}
+			for (scan s : scanners) {
+				s.close();
+			}
 		}
+
+		
 		/* Four tables inner join or with a cross product */
 		if (joinTable.size() == 3 || (fromTable.size() == 4 && joinTable.size() == 2)) {
 			StringBuilder temp1;
@@ -125,6 +133,9 @@ public class processPlainSelect {
 						}
 					}				
 				}
+			}
+			for (scan s : scanners) {
+				s.close();
 			}
 		}
 
