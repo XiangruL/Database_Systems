@@ -9,18 +9,17 @@ import java.io.InputStreamReader;
 import java.io.RandomAccessFile;
 
 public class scan {
-	private boolean flag = false;
 	private String tableName;
-//	private String path = main.path;
 	private int totalLineNum;
-	BufferedReader br;
+	private FileInputStream fis;
+	private BufferedReader br;
 	
 	public scan(String tableName) {
 		this.totalLineNum = getFileLine(tableName);
 		this.tableName = tableName;
  		File file = new File(main.path + tableName+".csv");
 //		File file = new File(tableName+".csv");
-		FileInputStream fis;
+		
 		try {
 			fis = new FileInputStream(file);
 			br = new BufferedReader(new InputStreamReader(fis));
@@ -43,6 +42,12 @@ public class scan {
 		if (line != null) {
 			sb.append(line);
 		} else {
+			try {
+				fis.getChannel().position(0);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 			return null;
 		}
 		return sb;
@@ -74,5 +79,14 @@ public class scan {
 	
 	public int getTotalLineNum() {
 		return totalLineNum;
+	}
+	
+	public void close(){
+		try {
+			br.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 }
