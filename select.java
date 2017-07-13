@@ -53,13 +53,21 @@ public class select {
 	public static StringBuilder selectRow(HashMap<String, HashMap<String, String>> schema,
 			StringBuilder row, String rowTableName, ArrayList<String> query,ArrayList<String> tableNames){
 		StringBuilder sb = new StringBuilder();
+		if(query.size()==0){
+			return row;
+		}
+		boolean flag = false;
 		for (int i = 0; i < query.size(); i++) {
 			if(query.get(i).contains(rowTableName)){
+				flag = true;
 				sb = selectRow(schema, row, query.get(i), tableNames);
 				if(sb.length() == 0){
 					return sb;
 				}
 			}
+		}
+		if(!flag){
+			return row;
 		}
 		return sb;
 	}
