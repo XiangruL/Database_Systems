@@ -41,15 +41,16 @@ public class scan {
 		}
 		if (line != null&&line.length()!=0) {
 			sb.append(line);
-			System.out.println(line);
+			
 		} else {
 			try {
 				fis.getChannel().position(0);
+				line = br.readLine();
+				sb.append(line);
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			return sb;
 		}
 		return sb;
 	}
