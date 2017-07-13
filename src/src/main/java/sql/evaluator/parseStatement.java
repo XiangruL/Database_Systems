@@ -23,22 +23,24 @@ public class parseStatement {
 		/* when statement is union */
 		if (selectBd instanceof SetOperationList) {
 			List<SelectBody> selects = ((SetOperationList) selectBd).getSelects();
-			parseSelect.splitStatement(selects.get(0), false);
-			ArrayList<StringBuilder> tempRes1 = parseSelect.subRes;
-			resetParameters.resetAll();
-			parseSelect.splitStatement(selects.get(1), false);
-			ArrayList<StringBuilder> tempRes2 = parseSelect.subRes;
+			parseSelect p1 = new parseSelect();
+			p1.splitStatement(selects.get(0));
+			ArrayList<StringBuilder> tempRes1 = p1.subRes;
+			parseSelect p2 = new parseSelect();
+			p2.splitStatement(selects.get(1));
+			ArrayList<StringBuilder> tempRes2 = p2.subRes;
 			ArrayList<StringBuilder> tempRes = union.unionTable(tempRes1, tempRes2);
 
-			printOutResult.printQueryResult(parseSelect.res);
+			printOutResult.printQueryResult(p1.res);
 			System.out.println("");
 			printOutResult.printOutFinalResult(tempRes);
 		/* when statement is plain select */
 		} else {
-			ArrayList<StringBuilder> tempRes = parseSelect.splitStatement(selectBd, false);
-			printOutResult.printQueryResult(parseSelect.res);
+			parseSelect p1 = new parseSelect();
+			ArrayList<StringBuilder> tempRes = p1.splitStatement(selectBd);
+			printOutResult.printQueryResult(p1.res);
 			System.out.println("");
-			printOutResult.printOutFinalResult(parseSelect.subRes);
+			printOutResult.printOutFinalResult(p1.subRes);
 		}
 
 		

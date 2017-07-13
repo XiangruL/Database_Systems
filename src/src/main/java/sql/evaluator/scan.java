@@ -6,6 +6,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.RandomAccessFile;
 
 public class scan {
 	private String tableName;
@@ -16,8 +17,6 @@ public class scan {
 	public scan(String tableName) {
 		this.totalLineNum = getFileLine(tableName);
 		this.tableName = tableName;
-//		System.out.println(main.path + tableName+".csv");
-		
  		File file = new File(main.path + tableName+".csv");
 //		File file = new File(tableName+".csv");
 		
@@ -40,16 +39,18 @@ public class scan {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		if (line != null) {
+		if (line != null&&line.length()!=0) {
 			sb.append(line);
+			
 		} else {
 			try {
 				fis.getChannel().position(0);
+				line = br.readLine();
+				sb.append(line);
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			return sb;
 		}
 		return sb;
 	}

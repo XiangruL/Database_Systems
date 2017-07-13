@@ -10,7 +10,7 @@ public class cross {
 			HashMap<String, HashMap<String, String>> newSchema,String tableName,
 			StringBuilder row1, StringBuilder row2, boolean updateFlag){
 		StringBuilder row = new StringBuilder();
-		if(row1.length()>0){
+		if(row1.length()>0&&row2.length()>0){
 			
 			if(updateFlag){
 				int index = join.index+1;
@@ -21,7 +21,6 @@ public class cross {
 			
 			row.append(row1.toString()+"|"+row2.toString());
 		}
-		
 		
 		return row;
 	}

@@ -13,7 +13,7 @@ public class join {
 			StringBuilder row1, StringBuilder row2, String query, boolean flag, boolean updatFlag){
 		
 		StringBuilder row = new StringBuilder();
-		if(row1.length()>0){
+		if(row1.length()>0&&row2.length()>0){
 			
 			row.append(row1.toString());
 			String[] rowString1 = row.toString().split("\\|");
@@ -38,9 +38,8 @@ public class join {
 			int colNum1 = tool.getColNum(schema, tableName1, colName1);
 			int colNum2 = tool.getColNum(oldSchema, tableName2, colName2);
 			
+
 			if(rowString1[colNum1].equals(rowString2[colNum2])&&!(rowString1[colNum1].equalsIgnoreCase("null"))){
-
-
 			
 				for (int i = 0; i < rowString2.length; i++) {
 					if(i!=colNum2){
