@@ -6,6 +6,8 @@ import java.util.ArrayList;
 public class processPlainSelect {
 	/** generate relation algebra **/
 	protected static ArrayList<StringBuilder> result;
+	protected static ArrayList<StringBuilder> subQueryRes = null;
+
 	
 	public static ArrayList<StringBuilder> algebraGen(parseSelect p) {
 		// control update schema or not
@@ -21,7 +23,7 @@ public class processPlainSelect {
 		}
 		p.schema = createTable.allTable;
 			
-		/* No join */
+		/* No join */		
 		if (p.joinTable.size() == 0) {
 			for (int i = 0; i < scanners.get(0).getTotalLineNum(); i++) {
 				StringBuilder temp = scanners.get(0).scanFile();
@@ -40,10 +42,7 @@ public class processPlainSelect {
 				temp1 = scanners.get(0).scanFile();
 				for (int j  = 0; j < scanners.get(1).getTotalLineNum(); j++) {
 					temp3 = scanners.get(1).scanFile();
-//					System.out.println(temp3);
-
 					temp2 = join.joinRow(createTable.allTable, createTable.allTable, null, temp1, temp3, p.joinTable.get(0), true, updateSchema);
-
 					p.schema = join.getNewSchema();
 					updateSchema = false;
 					if (temp2.length() != 0) {
@@ -157,7 +156,8 @@ public class processPlainSelect {
 				String[] whereS = s.split(" ");
 				if (whereS.length == 2 && whereS[1].equals("in")) {
 					// InSelect(HashMap<String, HashMap<String, String>> schema, StringBuilder row, String query, ArrayList<StringBuilder> result)
-					temp2 = select.InSelect(p.schema, temp, s, p.subRes, p.fromTable);
+//					System.out.println("+++++in :" + p.);
+					temp2 = select.InSelect(p.schema, temp, s, processPlainSelect.subQueryRes, p.fromTable);
 				} else {
 					temp2 = select.selectRow(p.schema, temp, s, p.fromTable);
 				}

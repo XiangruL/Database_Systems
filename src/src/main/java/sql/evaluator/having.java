@@ -18,12 +18,12 @@ public class having {
 		String colName = qstr[0].split("\\(")[0];
 		
 		int colNum = tool.getColNum(schema, tableName, colName);
-
 		double operand = Double.valueOf(qstr[2]);
 		String operator = qstr[1];
 		
 		String[] rowStrings=null;
 		double data = 0.0;
+
 		for (int i = 0; i < result.size(); i++) {
 			rowStrings = result.get(i).toString().split("\\|");
 			data = Double.valueOf(rowStrings[colNum]);

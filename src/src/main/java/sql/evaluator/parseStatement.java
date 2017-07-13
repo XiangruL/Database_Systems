@@ -31,8 +31,7 @@ public class parseStatement {
 			ArrayList<StringBuilder> tempRes2 = p2.subRes;
 			ArrayList<StringBuilder> tempRes = union.unionTable(tempRes1, tempRes2);
 
-			printOutResult.printQueryResult(p1.res);
-			System.out.println("");
+
 			printOutResult.printOutFinalResult(tempRes);
 		/* when statement is plain select */
 		} else {

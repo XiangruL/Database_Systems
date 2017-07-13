@@ -30,9 +30,9 @@ import net.sf.jsqlparser.statement.select.PlainSelect;
 import net.sf.jsqlparser.statement.select.Select;
 public class parseSelect {
 	
-	protected HashMap<String, String> aliasNameMap = new HashMap<String, String>();
-	protected boolean aliasFlag = false;
-	protected HashMap<String, HashMap<String, String>>  schema = createTable.allTable;
+	protected HashMap<String, String> aliasNameMap;
+	protected boolean aliasFlag;
+	protected HashMap<String, HashMap<String, String>>  schema;
 	/* containing join condition, "table1.PID = table2.ID" */
 	protected ArrayList<String> joinTable;
 	/* containing join tables, "table1, table2 ..." */
@@ -48,10 +48,11 @@ public class parseSelect {
 	protected ArrayList<SelectBody> subQueryTable;
 	protected ArrayList<StringBuilder> res;
 	protected ArrayList<StringBuilder> subRes;
-	protected ArrayList<StringBuilder> subQueryRes;
+	protected boolean subQueryFlag;
 	
 	public parseSelect() {
 		aliasNameMap = new HashMap<String, String>();
+		boolean aliasFlag = false;
 		schema = createTable.allTable;
 		joinTable = new ArrayList<String>();
 		joins = new ArrayList<String>();
@@ -66,10 +67,8 @@ public class parseSelect {
 		subQueryTable = new ArrayList<SelectBody>();
 		res = new ArrayList<StringBuilder>();
 		subRes = new ArrayList<StringBuilder>();
+		subQueryFlag = false;
 	}
-
-
-
 	
 	
 	public ArrayList<StringBuilder> splitStatement(SelectBody selectBd) {
@@ -109,11 +108,12 @@ public class parseSelect {
 	
 		/** get from item **/
 		fromParser.parseFrom(this, fromItem, joinList);
+		
 	
 		/* encounter nested query */
-		if (joinList != null) {
-			for (int i = 0; i < joinList.size(); i++) {
-				if ( joinList.get(i).toString().contains("(")) {
+		if (fromItem != null) {
+			for (int i = 0; i < 1; i++) {
+				if ( fromItem.toString().contains("(")) {
 					System.out.println("PROJECTION: " + selectItemList.toString().substring(1, selectItemList.toString().length() - 1));
 					StringBuilder temp = new StringBuilder(joinList.get(i).toString());
 					temp.append(", ");
@@ -158,12 +158,6 @@ public class parseSelect {
 			joinTable = parseSelect.sortJoinTable(joinTable);
 			fromTable = parseSelect.sortFromTable(joinTable, fromTable);
 		}
-//		}else {
-//			if (!subJoinTable.isEmpty()) {
-//				subJoinTable = parseSelect.sortJoinTable(subJoinTable);
-//				subFromTable = parseSelect.sortFromTable(subJoinTable, subFromTable);
-//			}
-//		}
 
 		/** Print out the query evaluated result **/
 
@@ -185,17 +179,31 @@ public class parseSelect {
 			
 		if (!subQueryTable.isEmpty()) {
 			parseSelect subP = new parseSelect();
+			subP.setSubQueryFlag(true);
 			subP.splitStatement(subQueryTable.get(0));
-			subQueryRes = processPlainSelect.algebraGen(subP);	
+			this.res.set(5, subP.res.get(5));
+			this.res.set(4, subP.res.get(4));
+			subRes = processPlainSelect.algebraGen(this);
+
 		}
 		else {
-			subRes = processPlainSelect.algebraGen(this);
+			if (this.subQueryFlag) {
+//				System.out.println(processPlainSelect.algebraGen(this));
+				processPlainSelect.subQueryRes = processPlainSelect.algebraGen(this);
+
+			} else {
+				subRes = processPlainSelect.algebraGen(this);
+			}
 		}
-		return subRes;
+		return null;
 	}
 	
 	public void setAliasFlag(boolean f) {
 		this.aliasFlag = f;
+	}
+	
+	public void setSubQueryFlag(boolean f) {
+		this.subQueryFlag = f;
 	}
 	
 	/* Enter a subquery */
@@ -264,7 +272,11 @@ public class parseSelect {
         	list.add(((BinaryExpression) ex).getRightExpression());
         	ex = ((BinaryExpression) ex).getLeftExpression();
         }
-        list.add((BinaryExpression) ex);
+        if (ex instanceof InExpression) {
+        	list.add((InExpression) ex);
+        } else {
+        	list.add((BinaryExpression) ex);
+        }
         return list;
     }
 	
@@ -281,13 +293,6 @@ public class parseSelect {
         list.add((BinaryExpression) ex);
         return list;
     }
-
-	/** 
-	 * @return fromTable containing from item
-	 */
-//	public static ArrayList<String> getFromTable() {
-//		return parseSelect.fromTable;
-//	}
 	
 	
 	/** This method use to join two tables, return the first row match the joining condition

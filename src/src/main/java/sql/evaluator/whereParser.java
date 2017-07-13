@@ -34,6 +34,7 @@ public class whereParser {
 				where.append(e.toString().toLowerCase());
 				where.append("\n");
 			}
+
 		// there is a single where statement
 		} else {
 			if (whereEx instanceof EqualsTo) {
