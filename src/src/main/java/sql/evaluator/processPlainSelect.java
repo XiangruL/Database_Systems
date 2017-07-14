@@ -7,12 +7,20 @@ public class processPlainSelect {
 	/** generate relation algebra **/
 	protected static ArrayList<StringBuilder> result;
 	protected static ArrayList<StringBuilder> subQueryRes = null;
+	protected static int pos1;
+	protected static int pos2;
+	protected static int pos3;
+	protected static int pos4;
 
+	
 	
 	public static ArrayList<StringBuilder> algebraGen(parseSelect p) {
 		// control update schema or not
-		boolean updateSchema = true;
+		printOutResult.printQueryResult(p.res);
+		System.out.println("");
 
+		
+		boolean updateSchema = true;
 		
 		ArrayList<scan> scanners = new ArrayList<scan>();
 		result = new ArrayList<StringBuilder>();
@@ -21,9 +29,20 @@ public class processPlainSelect {
 			scan current = new scan(s);
 			scanners.add(current);
 		}
-		p.schema = createTable.allTable;
-			
-		/* No join */		
+		/* save information of the last table in fromTable */
+		StringBuilder[] table = new StringBuilder[scanners.get(scanners.size() - 1).getTotalLineNum()];
+		StringBuilder tempRow = scanners.get(scanners.size() - 1).scanFile(); 
+		int indexTable = 0;
+		/* bring the table from disk to memory if there has join */
+		if (p.fromTable.size() > 1) {
+			while (indexTable < scanners.get(scanners.size() - 1).getTotalLineNum()) {
+				table[indexTable] = tempRow;
+				tempRow = scanners.get(scanners.size() - 1).scanFile(); 
+				indexTable++;			
+			}
+		}
+		
+		/* No join */
 		if (p.joinTable.size() == 0) {
 			for (int i = 0; i < scanners.get(0).getTotalLineNum(); i++) {
 				StringBuilder temp = scanners.get(0).scanFile();
@@ -31,21 +50,34 @@ public class processPlainSelect {
 			}
 		}
 
+
 		/* join */
 		/* Two tables inner join */
-		if (p.joinTable.size() == 1 && p.fromTable.size() == 2) {
+		if ((p.joinTable.size() == 1 || p.joinTable.size() == 2) && p.fromTable.size() == 2) {
 			StringBuilder temp1;
 			StringBuilder temp2;
 			StringBuilder temp3;
-			
 			for (int i = 0; i < scanners.get(0).getTotalLineNum(); i++) {
 				temp1 = scanners.get(0).scanFile();
+				temp1 = select.selectRow(createTable.allTable, temp1, p.fromTable.get(0), p.whereCondition, p.fromTable);
+				if (temp1.length() == 0) {
+					continue;
+				}
 				for (int j  = 0; j < scanners.get(1).getTotalLineNum(); j++) {
-					temp3 = scanners.get(1).scanFile();
-					temp2 = join.joinRow(createTable.allTable, createTable.allTable, null, temp1, temp3, p.joinTable.get(0), true, updateSchema);
+					temp2 = null;
+					temp3 = table[j];
+					temp3 = select.selectRow(createTable.allTable, temp3, p.fromTable.get(1), p.whereCondition, p.fromTable);
+					if (temp3.length() == 0) {
+						continue;
+					}
+					if (p.joinTable.size() == 2) {
+						temp2 = join.twoJoinCond(p.schema, createTable.allTable, temp1, temp3, p.joinTable, updateSchema);
+					} else {
+						temp2 = join.joinRow(p.schema, createTable.allTable, null, temp1, temp3, p.joinTable.get(0), true, updateSchema);
+					}
 					p.schema = join.getNewSchema();
 					updateSchema = false;
-					if (temp2.length() != 0) {
+					if (temp2 != null && temp2.length() != 0) {
 						processAfterJoin(p, temp2);
 					}
 				}
@@ -58,25 +90,43 @@ public class processPlainSelect {
 		/* Three tables inner join or with a cross product */
 		if (p.joinTable.size() == 2 || (p.fromTable.size() == 3 && p.joinTable.size() == 1)) {
 			StringBuilder temp1;
+			StringBuilder temp0;
 			StringBuilder temp2;
+			StringBuilder row;
 			StringBuilder temp3 = new StringBuilder();
 			boolean updateSchema1 = true;
 			boolean updateSchema2 = true;
 			for (int i = 0; i < scanners.get(0).getTotalLineNum(); i++) {
 				temp1 = scanners.get(0).scanFile();
+				temp1 = select.selectRow(createTable.allTable, temp1, p.fromTable.get(0), p.whereCondition, p.fromTable);
+				if (temp1.length() == 0) {
+					continue;
+				}
 				for (int j  = 0; j < scanners.get(1).getTotalLineNum(); j++) {
-					temp2 = new StringBuilder();
-					
-					temp2 = join.joinRow(createTable.allTable, createTable.allTable, null, temp1, scanners.get(1).scanFile(), p.joinTable.get(0), true, updateSchema1);
+					temp0 = scanners.get(1).scanFile();
+					temp0 = select.selectRow(createTable.allTable, temp0, p.fromTable.get(1), p.whereCondition, p.fromTable);
+					if (temp0.length() == 0) {
+						continue;
+					}	
+					temp2 = join.joinRow(createTable.allTable, createTable.allTable, null, temp1, temp0, p.joinTable.get(0), true, updateSchema1);
 					p.schema = join.getNewSchema();
 					updateSchema1 = false;
 					for (int k  = 0; k < scanners.get(2).getTotalLineNum(); k++) {
 						temp3 = new StringBuilder();
+						row = table[k];
+						row = select.selectRow(createTable.allTable, row, p.fromTable.get(2), p.whereCondition, p.fromTable);
+						if (row.length() == 0) {
+							continue;
+						}
 						if (temp2.length() != 0) {
+							// cross product
 							if(p.joinTable.size() == 1) {
-								temp3 = cross.crossProduct(p.schema, p.schema, p.fromTable.get(2).toString(), temp2, scanners.get(2).scanFile(), updateSchema2);
+//								temp3 = cross.crossProduct(p.schema, p.schema, p.fromTable.get(2).toString(), temp2, scanners.get(2).scanFile(), updateSchema2);
+								temp3 = cross.crossProduct(p.schema, p.schema, p.fromTable.get(2).toString(), temp2, row, updateSchema2);
 							} else {
-								temp3 = join.joinRow(p.schema, createTable.allTable, p.fromTable.get(2), temp2, scanners.get(2).scanFile(), p.joinTable.get(1), false, updateSchema2);
+								// join
+//								temp3 = join.joinRow(p.schema, createTable.allTable, p.fromTable.get(2), temp2, scanners.get(2).scanFile(), p.joinTable.get(1), false, updateSchema2);
+								temp3 = join.joinRow(p.schema, createTable.allTable, p.fromTable.get(2), temp2, row, p.joinTable.get(1), false, updateSchema2);
 								p.schema = join.getNewSchema();
 							}
 							updateSchema2 = false;
@@ -95,6 +145,9 @@ public class processPlainSelect {
 		
 		/* Four tables inner join or with a cross product */
 		if (p.joinTable.size() == 3 || (p.fromTable.size() == 4 && p.joinTable.size() == 2)) {
+			StringBuilder temp;
+			StringBuilder row;
+			StringBuilder temp0;
 			StringBuilder temp1;
 			StringBuilder temp2;
 			StringBuilder temp3 = new StringBuilder();
@@ -103,25 +156,47 @@ public class processPlainSelect {
 			boolean updateSchema2 = true;
 			boolean updateSchema3 = true;
 			for (int i = 0; i < scanners.get(0).getTotalLineNum(); i++) {
+				// select push down 
 				temp1 = scanners.get(0).scanFile();
+				temp1 = select.selectRow(createTable.allTable, temp1, p.fromTable.get(0), p.whereCondition, p.fromTable);
+				if (temp1.length() == 0) {
+					continue;
+				}
 				for (int j  = 0; j < scanners.get(1).getTotalLineNum(); j++) {
-					temp2 = join.joinRow(createTable.allTable, createTable.allTable, null, temp1, scanners.get(1).scanFile(), p.joinTable.get(0), true, updateSchema1);
+					// select push down
+					temp0 = scanners.get(1).scanFile();
+					temp0 = select.selectRow(createTable.allTable, temp0, p.fromTable.get(1), p.whereCondition, p.fromTable);
+					if (temp0.length() == 0) {
+						continue;
+					}	
+					temp2 = join.joinRow(createTable.allTable, createTable.allTable, null, temp1, temp0, p.joinTable.get(0), true, updateSchema1);
 					p.schema = join.getNewSchema();
 					updateSchema1 = false;
 					for (int k  = 0; k < scanners.get(2).getTotalLineNum(); k++) {
-						temp3 = new StringBuilder();
+						// select push down
+						temp = scanners.get(2).scanFile();
+						temp = select.selectRow(createTable.allTable, temp, p.fromTable.get(2), p.whereCondition, p.fromTable);
+						if (temp.length() == 0) {
+							continue;
+						}
 						if (temp2.length() != 0) {
-							temp3 = join.joinRow(p.schema, createTable.allTable, p.fromTable.get(2), temp2, scanners.get(2).scanFile(), p.joinTable.get(1), false, updateSchema2);
+							temp3 = join.joinRow(p.schema, createTable.allTable, p.fromTable.get(2), temp2, temp, p.joinTable.get(1), false, updateSchema2);
 							p.schema = join.getNewSchema();
 							updateSchema2 = false;
 						}
 						for (int l  = 0; l < scanners.get(3).getTotalLineNum(); l++) {
 							temp4 = new StringBuilder();
+							// select push down
+							row  = table[l];
+							row = select.selectRow(createTable.allTable, row, p.fromTable.get(3), p.whereCondition, p.fromTable);
+							if (row.length() == 0) {
+								continue;
+							}
 							if (temp3.length() != 0) {
 								if(p.joinTable.size() == 2) {
-//									temp4 = cross.crossProduct(parseSelect.schema, parseSelect.schema, fromTable.get(3).toString(), temp3, scanners.get(3).scanFile(), updateSchema3);
+									temp4 = cross.crossProduct(p.schema, p.schema, p.fromTable.get(3).toString(), temp3, row, updateSchema3);
 								} else {
-									temp4 = join.joinRow(p.schema, createTable.allTable, p.fromTable.get(3), temp3, scanners.get(3).scanFile(), p.joinTable.get(2), false, updateSchema3);
+									temp4 = join.joinRow(p.schema, createTable.allTable, p.fromTable.get(3), temp3, row, p.joinTable.get(2), false, updateSchema3);
 									p.schema = join.getNewSchema();
 								}
 								updateSchema3 = false;
@@ -155,11 +230,11 @@ public class processPlainSelect {
 			for (String s : p.whereCondition) {
 				String[] whereS = s.split(" ");
 				if (whereS.length == 2 && whereS[1].equals("in")) {
-					// InSelect(HashMap<String, HashMap<String, String>> schema, StringBuilder row, String query, ArrayList<StringBuilder> result)
-//					System.out.println("+++++in :" + p.);
 					temp2 = select.InSelect(p.schema, temp, s, processPlainSelect.subQueryRes, p.fromTable);
 				} else {
-					temp2 = select.selectRow(p.schema, temp, s, p.fromTable);
+					if (!s.isEmpty()) {
+						temp2 = select.selectRow(p.schema, temp, s, p.fromTable);
+					}
 				}
 				// not meet the select requirement
 				if (temp2 == null || temp2.length() == 0) {

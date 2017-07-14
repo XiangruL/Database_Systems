@@ -23,7 +23,7 @@ public class select {
 			recordRow.append(row);
 		
 			for (int i = 0; i < selectQuery.size(); i++) {
-				Queries = selectQuery.get(i).split("\\|");
+				Queries = selectQuery.get(i).split("\\s+");
 				
 				for (int j = 0; j < Queries.length; j++) {
 					
@@ -48,6 +48,32 @@ public class select {
 		}
 		
 		return row;
+	}
+	
+	public static StringBuilder selectRow(HashMap<String, HashMap<String, String>> schema,
+			StringBuilder row, String rowTableName, ArrayList<String> query,ArrayList<String> tableNames){
+		StringBuilder sb = new StringBuilder();
+		if(query.size()==0){
+			return row;
+		}
+		boolean flag = false;
+		for (int i = 0; i < query.size(); i++) {
+			if(query.get(i).contains(rowTableName)){
+				String[] qst = query.get(i).split("\\s+");
+				if(qst.length == 2){
+					continue;
+				}
+				flag = true;
+				sb = selectRow(schema, row, query.get(i), tableNames);
+				if(sb.length() == 0){
+					return sb;
+				}
+			}
+		}
+		if(!flag){
+			return row;
+		}
+		return sb;
 	}
 	
 	//query contains upper cases and lower cases
@@ -104,6 +130,7 @@ public class select {
 			
 			String[] rowStrings = row.toString().split("\\|");
 			temp = rowStrings[colNum];
+			
 			switch (operator) {
 			
 			case "!=":

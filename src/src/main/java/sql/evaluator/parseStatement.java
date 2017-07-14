@@ -14,8 +14,6 @@ public class parseStatement {
 	
 	public static void parsingWorkFlow(Statement stmt) {
 		SelectBody selectBd = ((Select) stmt).getSelectBody();
-		/* refresh all parameters */
-		resetParameters.resetAll();
 		
 		System.out.println("===========================================================================================");
 		System.out.println("Query evaluation complete. Following is the result: ");
@@ -30,20 +28,14 @@ public class parseStatement {
 			p2.splitStatement(selects.get(1));
 			ArrayList<StringBuilder> tempRes2 = p2.subRes;
 			ArrayList<StringBuilder> tempRes = union.unionTable(tempRes1, tempRes2);
-
-
 			printOutResult.printOutFinalResult(tempRes);
 		/* when statement is plain select */
 		} else {
 			parseSelect p1 = new parseSelect();
 			ArrayList<StringBuilder> tempRes = p1.splitStatement(selectBd);
-			printOutResult.printQueryResult(p1.res);
-			System.out.println("");
+			// print out the final result requested by the query 
 			printOutResult.printOutFinalResult(p1.subRes);
-		}
-
-		
-		
+		}	
 	}
 
 }

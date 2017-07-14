@@ -38,7 +38,7 @@ public class distinct {
 			tableName = tableNames.get(0);
 			colName = query;
 		}else{
-			String[] gqstr = query.split("\\.");
+			String[] gqstr = qstr[0].split("\\.");
 			tableName = gqstr[0];
 			colName = gqstr[1];
 		}
@@ -67,7 +67,7 @@ public class distinct {
 		if(row.length() > 0){
 			Map<Integer, String> map = new HashMap<Integer, String>();
 			String rowTemp;
-			String[] qstr = query.split(", ");
+			String[] qstr = query.split("\\, ");
 			String tableName;
 			String colName;
 			int colNum;
@@ -76,7 +76,7 @@ public class distinct {
 				tableName = tableNames.get(0);
 				colName = query;
 			}else{
-				String[] gqstr = query.split("\\.");
+				String[] gqstr = qstr[0].split("\\.");
 				tableName = gqstr[0];
 				colName = gqstr[1];
 			}

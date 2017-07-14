@@ -54,11 +54,23 @@ public class whereParser {
 		join.append("JOIN: ");
 		join.append(p.joins.toString().substring(1, p.joins.toString().length() - 1));
 		join.append("\n");
-		p.res.add(3, join);
+		p.res.add(join);
 		
+		StringBuilder select = new StringBuilder();
+		select.append("SELECTION: ");
+		ArrayList<String> selectList = new ArrayList<String>();
 		for (Expression e : p.condition) {
 			p.whereCondition.add(whereParser.parseWhereCondition(p, e));
 		}
+		for (String sb : p.whereCondition) {
+			String[] temp = sb.split(" ");
+			selectList.add(temp[0]);
+		}
+		select.append(selectList.toString().substring(1, selectList.toString().length() - 1));
+		select.append("\n");
+		p.res.add(3, select);
+
+
 
 	}
 	

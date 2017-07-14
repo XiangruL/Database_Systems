@@ -53,7 +53,7 @@ public class parseSelect {
 	public parseSelect() {
 		aliasNameMap = new HashMap<String, String>();
 		boolean aliasFlag = false;
-		schema = createTable.allTable;
+		schema = new HashMap<String, HashMap<String, String>>(createTable.allTable);
 		joinTable = new ArrayList<String>();
 		joins = new ArrayList<String>();
 		condition = new ArrayList<Expression>();
@@ -132,7 +132,30 @@ public class parseSelect {
 					return null;
 				}
 			}
-		}		
+		}	
+		
+		if (joinList != null) {
+			for (int i = 0; i < joinList.size(); i++) {
+				if ( joinList.get(i).toString().contains("(")) {
+					System.out.println("PROJECTION: " + selectItemList.toString().substring(1, selectItemList.toString().length() - 1));
+					StringBuilder temp = new StringBuilder(joinList.get(i).toString());
+					temp.append(", ");
+					String prefix = "";
+					for (int j = 0; j < joinList.size(); j++) {
+						if (j != i) {
+							temp.append(prefix);
+							prefix = ", ";
+							temp.append(joinList.get(j).toString().split(" ")[0]);
+						}
+					}
+					System.out.println("FROM: " + temp);
+					System.out.println("SELECTION: " +  selectItemList.toString().substring(1, selectItemList.toString().length() - 1));
+					System.out.println("GROUP BY: " + groupByItemList);
+					System.out.println("ORDER BY: " + orderByItemList);
+					return null;
+				}
+			}
+		}	
 
 		/** get select item **/
 		selectParser.parseSelect(this, selectItemList);
@@ -158,24 +181,7 @@ public class parseSelect {
 			joinTable = parseSelect.sortJoinTable(joinTable);
 			fromTable = parseSelect.sortFromTable(joinTable, fromTable);
 		}
-
-		/** Print out the query evaluated result **/
-
-//			if (!subOrderByTable.isEmpty()) {
-//				temp = res.get(5);
-//				if (orderByTable.get(0) == null) {
-//					StringBuilder s = new StringBuilder();
-//					s.append("ORDER BY: ");
-//					s.append(subOrderByTable.toString().substring(1, subOrderByTable.toString().length() - 1));
-//					s.append("\n");
-//					res.set(5, s);
-//				} else {
-//					temp.insert(temp.length() - 1, ", ");
-//					temp.insert(temp.length() - 1, subOrderByTable.toString().substring(1, subOrderByTable.toString().length() - 1));
-//				}
-//			}
-//		}
-		
+	
 			
 		if (!subQueryTable.isEmpty()) {
 			parseSelect subP = new parseSelect();
@@ -369,6 +375,7 @@ public class parseSelect {
 	public static ArrayList<String> sortJoinTable(ArrayList<String> joinT) {
 		ArrayList<String> newJoinTable = new ArrayList<String>();
 		HashSet<String> tableName = new HashSet<String>(); 
+		String ts = new String();
 		for (String s : joinT) {
 			StringBuilder temp = new StringBuilder();
 			String[] s1 = s.split(" = ");
@@ -376,11 +383,11 @@ public class parseSelect {
 			String[] itm2 = s1[1].split("\\.");
 			// if at least one table showed before, put this condition in the join table 
 			if (tableName.size() == 0 || tableName.contains(itm1[0]) || tableName.contains(itm2[0])) {
-				if (tableName.contains(itm1[0])) {
+				if (tableName.toString().contains(itm1[0])) {
 					temp.append(s1[0]);
 					temp.append(" = ");
 					temp.append(s1[1]);
-				} else if (tableName.contains(itm2[0])) {
+				} else if (tableName.toString().contains(itm2[0])) {
 					temp.append(s1[1]);
 					temp.append(" = ");
 					temp.append(s1[0]);
@@ -391,8 +398,25 @@ public class parseSelect {
 				tableName.add(itm2[0]);
 				newJoinTable.add(temp.toString());
 			} else {
-				joinT.add(s);
+				// didn't show before, keep it
+				ts = s;
+//				joinT.add(s);
 			}
+		}
+		if (ts.length() != 0) {
+			StringBuilder temp = new StringBuilder();
+			String[] s1 = ts.split(" = ");
+			String[] itm1 = s1[0].split("\\.");
+			if (tableName.toString().contains(itm1[0])) {
+				temp.append(s1[0]);
+				temp.append(" = ");
+				temp.append(s1[1]);
+			} else {
+				temp.append(s1[1]);
+				temp.append(" = ");
+				temp.append(s1[0]);
+			}
+			newJoinTable.add(temp.toString());
 		}
 		return newJoinTable;	
 	}

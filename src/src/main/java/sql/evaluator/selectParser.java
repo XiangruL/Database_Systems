@@ -9,7 +9,6 @@ import net.sf.jsqlparser.statement.select.SelectItem;
 public class selectParser {
 	
 	public static void parseSelect(parseSelect p, List<SelectItem> selectItemList) {
-		StringBuilder select = new StringBuilder();
 		StringBuilder project = new StringBuilder();
 		for (SelectItem o : selectItemList) {
 			// select *
@@ -35,14 +34,10 @@ public class selectParser {
 				}
 			}
 		}
-		select.append("SELECTION: ");
-		select.append(p.projectTable.toString().substring(1, p.projectTable.toString().length() - 1));
 		project.append("PROJECTION: ");
 		project.append(p.projectTable.toString().substring(1, p.projectTable.toString().length() - 1));
-		select.append("\n");
 		project.append("\n");
 		p.res.add(0, project);
-		p.res.add(select);
 
 		
 	}
